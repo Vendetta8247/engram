@@ -84,8 +84,9 @@ ask you to remember or recall. `/engram:remember` and `/engram:recall` are
 manual overrides; the default is that you do this proactively:
 
 - **Auto-recall** — at session start and before any non-trivial work on a
-  project, `search`/`build_context` the project brain + its linked global
-  knowledge *without being asked*. Lead with what's already known.
+  project, `search`/`build_context` the store for this project's notes
+  (`projects/<name>/`) + their linked global knowledge *without being asked*.
+  Lead with what's already known.
 - **Auto-capture** — the moment you learn something durable, write it to the
   graph immediately, mid-task, without being asked: a user preference, a
   correction, a gotcha, a decision-and-its-why, a reusable pattern, a runbook.
