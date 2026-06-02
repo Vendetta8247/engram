@@ -42,8 +42,10 @@ copy_in() {
   copied=$((copied+1))
 }
 
-# 1. global CLAUDE.md
+# 1. global CLAUDE.md + settings (so disabling native auto-memory is reversible)
 copy_in "${CLAUDE_DIR}/CLAUDE.md"
+copy_in "${CLAUDE_DIR}/settings.json"
+copy_in "${CLAUDE_DIR}/settings.local.json"
 
 # 2. every project's memory/ dir and any MEMORY.md
 if [ -d "${CLAUDE_DIR}/projects" ]; then

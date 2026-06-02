@@ -30,12 +30,17 @@ Precondition: `/engram:setup` has run (the global brain + basic-memory MCP exist
 5. For each source memory note, decide its tier using the **using-the-graph** skill's routing rule (reusable → global; project-specific → that repo's project brain; derivable → drop, keep a pointer; stale/abandoned → skip or archive). Apply the typed-relation + observation conventions when writing.
 6. Write notes into the graph via the basic-memory MCP (`write_note` / `edit_note`). Dedupe: `search` before each write; update in place rather than forking. Preserve genuinely useful content (code anchors, gotchas, runbooks); drop restated-from-code values and dead/abandoned material (note it in the migration summary rather than silently dropping).
 7. Once a store's content is safely in the graph, **thin the native file**: replace the body of `MEMORY.md` (and, if the user agrees, the project `CLAUDE.md` memory sections) with a short pointer, e.g.:
-   > Durable memory now lives in the **Engram** knowledge graph (basic-memory MCP). Consult it for project + global knowledge; write learnings there, not here. See the `using-the-graph` skill. Pre-migration backup: `~/.engram/backups/<stamp>/`.
+   > Durable memory now lives in the **Engram** knowledge graph (basic-memory MCP). Consult it for project + global knowledge; write learnings there, not here. ALL "remember/note/save" requests route to Engram, never native memory. See the `using-the-graph` skill. Pre-migration backup: `~/.engram/backups/<stamp>/`.
    Do not delete the native files — just thin them.
+8. **Disable native auto-memory so Engram is the sole memory system** (the decisive step — eliminates the competing write path rather than relying on prompting). Merge `"autoMemoryEnabled": false` into `~/.claude/settings.json` — READ the existing file, set just that key, preserve everything else (never clobber). This is backed up in Phase 1 and fully reversible (set it back to `true` or restore `settings.json` from the backup). Tell the user you did this and how to undo it.
+9. **Install the global routing directive** so every future session — in any project — routes memory to Engram: append a short, clearly-marked block to `~/.claude/CLAUDE.md` (the always-loaded global instructions), e.g.:
+   > ## Engram memory (installed by /engram:adopt)
+   > Durable memory is the Engram knowledge graph (basic-memory MCP), not native memory. When asked to remember / note / save / keep in mind / don't forget anything → write it to Engram (right tier). When asked what's known/decided → query Engram. Native auto-memory is disabled.
+   Merge, don't overwrite — preserve the user's existing global instructions.
 
 ## Phase 4 — REPORT
 
-8. Summarize: how many notes migrated to global vs project, what was dropped and why, where the backup is, and the one-line restore instruction (copy back from `~/.engram/backups/<stamp>/tree/...`).
-9. Remind the user a future `/engram:restore <stamp>` (planned) will reverse this, and that the backup is the safety net until then.
+10. Summarize: notes migrated to global vs project, what was dropped and why, native auto-memory now disabled, the global routing directive installed, where the backup is, and the one-line restore instruction (copy back from `~/.engram/backups/<stamp>/tree/...`; re-enable native memory by restoring `settings.json` or setting `autoMemoryEnabled: true`).
+11. Remind the user a future `/engram:restore <stamp>` (planned) will reverse all of this, and that the backup is the safety net until then.
 
 Golden rule: if anything is unclear or the user is unsure, **stop after Phase 1**. A backup with no migration is a safe, valid outcome.

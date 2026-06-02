@@ -1,6 +1,7 @@
 ---
 name: remember
-description: MANUAL OVERRIDE to force-save a specific fact into the Engram graph now. Routine capture is automatic (the agent writes durable learnings on its own — see the using-the-graph skill); use this only when the user explicitly wants something saved.
+description: Use whenever the user asks to remember, note, save, keep in mind, don't forget, jot down, or log something. Writes it into the Engram knowledge graph (basic-memory MCP), routed to the right tier — NEVER into Claude's native memory. (Routine durable learnings are also captured automatically per the using-the-graph skill; this is the explicit path for a user's save request.)
+when_to_use: Trigger phrases like "remember that", "note this", "save this", "keep in mind", "don't forget", "make a note", "jot down", "log that", "store this", "for future reference".
 argument-hint: "<the fact to remember>"
 allowed-tools: Read AskUserQuestion
 ---

@@ -53,6 +53,19 @@ restating it.
 Use `search` (semantic + full-text) and `build_context` to traverse a note plus
 its linked neighborhood. Prefer following typed relations over re-deriving facts.
 
+## Engram OWNS the "remember" verb — never native memory
+
+When the user says **"remember", "note that", "save this", "keep in mind",
+"don't forget", "make a note", "for future reference", "log that"** — or
+anything that means *store this* — that goes into the **Engram graph** (the
+basic-memory MCP), and **never** into Claude's built-in/native memory. Engram
+is the single durable store; native memory is superseded. If you ever feel the
+native-memory reflex, redirect it to Engram. (A UserPromptSubmit hook also
+detects these phrasings and reminds you — but the rule holds with or without it.)
+
+The same applies to recall: "what do you know about…", "did we decide…",
+"have we hit this before…" → query the Engram graph, not native memory.
+
 ## Automatic, not on-demand (this is the core behavior)
 
 Memory is **ambient** — you maintain it on your own. The user does NOT have to

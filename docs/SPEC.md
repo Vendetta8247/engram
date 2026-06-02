@@ -73,7 +73,19 @@ All namespaced (`/engram:<cmd>`). The two the user explicitly called out — **i
 | Command | Does |
 |---|---|
 | `/engram:setup` | **One-shot bootstrap.** Check prereqs (uv/uvx, node, git). Install Basic Memory. Register the global MCP (user scope). Create the global graph at `~/.engram/global` + `git init` it. Install Basic Memory's CC plugin hooks. Idempotent — safe to re-run. |
-| `/engram:adopt` | **Replace native Claude memory — backup first.** (1) Snapshot EVERYTHING: `~/.claude/CLAUDE.md`, every `~/.claude/projects/*/memory/`, project `CLAUDE.md`s → timestamped tarball **and** a git commit in `~/.engram/backups/`. (2) Print exactly what was backed up + where. (3) **Require explicit "yes" to proceed.** (4) Migrate notes into the graph (route global vs project), converting to typed-relation format. (5) Replace native `MEMORY.md`/`CLAUDE.md` bodies with thin pointers. Reversible from the snapshot. |
+| `/engram:adopt` | **Replace native Claude memory — backup first.** (1) Snapshot EVERYTHING: `~/.claude/CLAUDE.md`, `settings.json`(+local), every `~/.claude/projects/*/memory/`, project `CLAUDE.md`s → timestamped tarball **and** git commit. (2) Print the manifest. (3) **Require explicit "yes".** (4) Migrate notes into the graph (route global vs project). (5) Thin native `MEMORY.md`/`CLAUDE.md` bodies to pointers. (6) **Disable native auto-memory** (`autoMemoryEnabled: false` in `~/.claude/settings.json`). (7) **Install the global routing directive** in `~/.claude/CLAUDE.md`. Fully reversible from the snapshot. |
+
+### How Engram owns the "remember" verb (defense-in-depth)
+
+No single instruction-driven mechanism is guaranteed, so the routing is layered, strongest first:
+
+1. **Disable the competitor.** `/engram:adopt` sets `autoMemoryEnabled: false` — native auto-memory stops reading/writing entirely. (Reversible; backed up.) This is the decisive layer.
+2. **Deterministic interceptor.** A `UserPromptSubmit` hook (`engram-prompt-router.sh`) regex-detects memory-intent verbs in the actual prompt and injects an `additionalContext` instruction to route to Engram — fires on the words, every prompt, independent of model judgment.
+3. **Always-loaded directive.** The global `~/.claude/CLAUDE.md` block (installed by adopt) keeps the routing rule in context every session, in every project.
+4. **Standing rule.** The `using-the-graph` skill's "Engram OWNS the remember verb" section.
+5. **Skill auto-invocation.** `remember`/`recall` skill `description` + `when_to_use` trigger phrases bias the model to pick them on natural-language memory requests.
+
+If layer 1 is active, the rest are belt-and-suspenders; if a user declines disabling native memory, layers 2–5 still route the verb.
 | `/engram:init` | Initialize the **current repo** as a project tier: create `<repo>/.engram/`, add a Basic Memory project, write a committed `.mcp.json` pinning `BASIC_MEMORY_MCP_PROJECT`, seed an index/MOC note linking up to global. |
 | `/engram:remember <fact>` | Capture a fact as a graph note. Auto-routes global vs project (asks if ambiguous), applies the typed-relation conventions, dedupes against existing notes. |
 | `/engram:recall <query>` | Query + traverse the graph (semantic + full-text + link-following) and summarize. |
