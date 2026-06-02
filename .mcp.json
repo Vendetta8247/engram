@@ -2,7 +2,8 @@
   "mcpServers": {
     "basic-memory": {
       "command": "uvx",
-      "args": ["basic-memory", "mcp"]
+      "args": ["basic-memory", "mcp"],
+      "env": { "BASIC_MEMORY_MCP_PROJECT": "engram" }
     }
   }
 }

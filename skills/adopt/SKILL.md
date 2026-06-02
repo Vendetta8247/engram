@@ -13,7 +13,7 @@ This is the single command to go fully live — it **self-bootstraps**, so the u
 
 ## Phase 0 — ENSURE ENGRAM IS INSTALLED (self-bootstrap)
 
-If `~/Engram/global` does not exist yet, run the `/engram:setup` steps inline first (install Basic Memory, wire the MCP, create the global brain + inbox). If it already exists, skip — it's done. Only after the engine + global brain exist do you proceed to the backup. (`/engram:setup` still exists as a standalone, optional path for users who want to install Engram and try it *alongside* native memory before adopting — but adopt no longer requires it.)
+If `~/Engram/INDEX.md` does not exist yet (Engram not set up), run the `/engram:setup` steps inline first (install Basic Memory, register the single `engram` project at `~/Engram`, create the store layout + inbox + INDEX.md). If it already exists, skip — it's done. Only after the engine + store exist do you proceed to the backup. (`/engram:setup` still exists as a standalone, optional path for trying Engram *alongside* native memory before adopting — but adopt no longer requires it.)
 
 ## Phase 1 — BACK UP EVERYTHING (always, first, no exceptions)
 
@@ -31,7 +31,7 @@ If `~/Engram/global` does not exist yet, run the `/engram:setup` steps inline fi
 
 ## Phase 3 — MIGRATE (only after "yes")
 
-5. For each source memory note, decide its tier using the **using-the-graph** skill's routing rule (reusable → global; project-specific → that repo's project brain; derivable → drop, keep a pointer; stale/abandoned → skip or archive). Apply the typed-relation + observation conventions when writing.
+5. For each source memory note, decide where it goes using the **using-the-graph** routing rule: reusable → a top-level domain folder under `~/Engram` (`workflow/`, `kmp/`, …); specific to one project → `~/Engram/projects/<name>/` (derive `<name>` from which project the native note came from — e.g. the Habito memory dir → `projects/habito/`); derivable → drop, keep a pointer; stale/abandoned → skip or archive. Apply the typed-relation + observation conventions when writing.
 6. Write notes into the graph via the basic-memory MCP (`write_note` / `edit_note`). Dedupe: `search` before each write; update in place rather than forking. Preserve genuinely useful content (code anchors, gotchas, runbooks); drop restated-from-code values and dead/abandoned material (note it in the migration summary rather than silently dropping).
 7. Once a store's content is safely in the graph, **thin the native file**: replace the body of `MEMORY.md` (and, if the user agrees, the project `CLAUDE.md` memory sections) with a short pointer, e.g.:
    > Durable memory now lives in the **Engram** knowledge graph (basic-memory MCP). Consult it for project + global knowledge; write learnings there, not here. ALL "remember/note/save" requests route to Engram, never native memory. See the `using-the-graph` skill. Pre-migration backup: `~/Engram/backups/<stamp>/`.

@@ -1,20 +1,17 @@
 ---
 name: init
-description: OPTIONAL manual setup of the current repo's project brain. Normally this happens AUTOMATICALLY — the agent auto-creates a repo's project brain the first time it stores project knowledge there (see using-the-graph), so you rarely run this. Use it to deliberately set a repo up + commit the .mcp.json pin ahead of time.
+description: OPTIONAL — pre-create the current project's folder in the Engram store. Normally automatic — the agent creates ~/Engram/projects/<name>/ the first time it stores project knowledge, so you rarely run this. Use it to set a project up deliberately (e.g. seed its index) ahead of time.
 argument-hint: "[project-name]"
 allowed-tools: Bash Read Write
 ---
 
-# /engram:init — create this repo's project brain
+# /engram:init — pre-create this project's folder in the store
 
-Precondition: `/engram:setup` has run. If `~/Engram/global` is missing, tell the user to run `/engram:setup` first.
+Engram is ONE store at `~/Engram`. A project's facts live in `~/Engram/projects/<name>/` — there are no per-repo `.engram` folders, no separate Basic Memory project, and no `.mcp.json` pin. This command just sets up that subfolder deliberately; normally it happens automatically on first project capture.
 
-1. Determine the project name: use `$ARGUMENTS` if given, else the repo directory name (kebab-cased).
-2. Create the project store at `<repo>/.engram/` (only if absent). Add `INDEX.md` (a short map-of-content seeded with one line: `- applies_to [[INDEX]]` pointing at the global index).
-3. Register a Basic Memory project for it: `basic-memory project add <name> "$(pwd)/.engram"` (check `basic-memory project --help` for exact syntax).
-4. Pin this repo to that project: write/merge a committed `.mcp.json` in the repo root that runs the basic-memory MCP with `BASIC_MEMORY_MCP_PROJECT` set to `<name>`, e.g.:
-   ```json
-   { "mcpServers": { "basic-memory": { "command": "uvx", "args": ["basic-memory", "mcp"], "env": { "BASIC_MEMORY_MCP_PROJECT": "<name>" } } } }
-   ```
-   If a `.mcp.json` already exists, merge rather than overwrite.
-5. Tell the user: project-specific facts now land here and should `- applies_to [[...]]` global notes instead of restating them (see the `using-the-graph` skill). Recommend committing `.engram/` and `.mcp.json` to the repo.
+Precondition: `~/Engram/INDEX.md` exists (Engram is set up). If not, run `/engram:adopt` (or `/engram:setup`) first.
+
+1. Determine the project name: use `$ARGUMENTS` if given, else the current git repo's folder name (kebab-cased).
+2. Create `~/Engram/projects/<name>/` (only if absent).
+3. Seed `~/Engram/projects/<name>/INDEX.md` — a one-line map-of-content: `- part_of [[INDEX]]` linking up to the global index, plus a title line.
+4. Tell the user: project-specific facts (config, IDs, this app's internals) now land in `~/Engram/projects/<name>/`, and should `- applies_to [[...]]` the reusable global notes (in the top-level domain folders) rather than restating them. No repo files are created — it's all in the central store, so it's searchable alongside every other project.

@@ -15,23 +15,24 @@ thin pointers to this graph).
 
 | Fact | Goes to |
 |---|---|
-| Reusable across projects (e.g. a KMP localization pattern, a Firebase stage/live rule, how the user likes to work) | **global** brain |
-| Specific to this one project/app | **project** brain (the pinned project for this repo) |
+| Reusable across projects (a KMP pattern, how the user works, a general gotcha) | a **top-level domain folder** under `~/Engram` — `workflow/`, `kmp/`, `ios/`, `android/`, `tooling/`, … |
+| Specific to ONE project/app (its config, IDs, this app's internals — e.g. a Firebase bucket name) | **`~/Engram/projects/<name>/`** |
 | Derivable cheaply from code/config at point of need | **nowhere** — keep a pointer, re-derive |
-| Raw thought to sort later | the **inbox** (`global/inbox/`), via `/engram:triage` later |
+| Raw thought to sort later | the **inbox** (`~/Engram/inbox/`), via `/engram:triage` later |
 
-**Promotion rule:** if a project fact turns out reusable, move it to global and
-leave the project note as a thin link. One fact, one home — never duplicate.
+**Promotion rule:** if a project fact turns out reusable, move it from
+`projects/<name>/` up to the right top-level domain folder and leave a thin
+link. One fact, one home — never duplicate.
 
-**Project brains auto-create — the user never runs `/engram:init`.** When you are
-about to store project-specific knowledge while working in a repo that has no
-Engram project brain yet, **create one first, automatically, without being
-asked**: do the `/engram:init` steps (make `<repo>/.engram/`, register the
-basic-memory project, write/merge the `.mcp.json` pin, seed an index note that
-`applies_to` the global index), then write the note. Do this lazily — only when
-there's actually project knowledge to store, so repos you merely browse don't
-get an empty brain. `/engram:init` remains as a manual option for deliberately
-setting a repo up (and committing the `.mcp.json` pin) ahead of time.
+**It is ONE store — `~/Engram` — not per-repo brains.** Everything (global
+knowledge + every project's facts) lives under `~/Engram`, which is why
+cross-project recall is a single search. Project-specific facts go in
+`~/Engram/projects/<project-name>/`, where `<project-name>` is the current git
+repo's folder name — create that subfolder automatically the first time you
+store project knowledge there (no `/engram:init`, no per-repo files, no
+`.mcp.json` pin; memory is never scattered into the repos themselves). When
+recalling, search the whole store — a fact from another project is one query
+away.
 
 ## How to write (basic-memory MCP tools)
 

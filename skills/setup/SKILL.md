@@ -17,23 +17,25 @@ Set up Engram on this machine. **Idempotent** — re-running must not clobber ex
 - `uv tool install basic-memory` (or `uv tool upgrade basic-memory` if already installed).
 - Verify: `basic-memory --version`. The MCP server is declared in the plugin's `.mcp.json` (`uvx basic-memory mcp`) and starts when the plugin is enabled — confirm it shows up under `/mcp` after setup (mention this to the user).
 
-## 3. Create the global brain
+## 3. Create the ONE store (~/Engram)
+Everything lives under `~/Engram` — reusable knowledge in top-level domain folders, every project's facts under `projects/<name>/`. There are no per-repo brains.
 - Create the directory tree (only if absent — never overwrite):
-  `~/Engram/global/{workflow,kmp,ios,android,firebase}` and `~/Engram/global/inbox`.
-- `git init` `~/Engram/global` if it isn't already a repo; add a `.gitignore` for `.obsidian/` and OS cruft; make an initial commit.
-- Seed `~/Engram/global/INDEX.md` — a short map-of-content note listing the domains, only if it doesn't exist.
+  `~/Engram/{workflow,kmp,ios,android,tooling}`, `~/Engram/projects`, and `~/Engram/inbox`.
+  (Note: project config like Firebase IDs/buckets is per-project → it lives under `projects/<name>/`, not a global `firebase/` domain.)
+- `git init` `~/Engram` if it isn't already a repo; add a `.gitignore` for `.obsidian/` and OS cruft; initial commit.
+- Seed `~/Engram/INDEX.md` — a short map-of-content listing the global domains + a Projects section. (This file is also the "Engram is set up" sentinel the hooks check.)
 
-## 4. Register the global Basic Memory project
-- Discover the exact CLI first: `basic-memory project --help` (subcommand names can change — adapt to what you see).
-- Add the project pointing at the global brain, e.g. `basic-memory project add engram-global ~/Engram/global`.
-- Make it the default (e.g. `basic-memory project default engram-global`; if there's no such subcommand, set `default_project` in `~/.basic-memory/config.json`).
-- Verify with `basic-memory project list`.
+## 4. Register the single Basic Memory project
+- Discover the exact CLI first: `basic-memory project --help` (subcommand names can change — adapt).
+- Add ONE project named `engram` pointing at the store root: `basic-memory project add engram ~/Engram --local`. (One project over the whole store = cross-project search in a single query. Don't create a project per repo — that would nest and break.)
+- Make it the default: `basic-memory project default engram` (or set `default_project` in `~/.basic-memory/config.json`). The plugin's `.mcp.json` also pins `BASIC_MEMORY_MCP_PROJECT=engram`.
+- Verify with `basic-memory project list` (engram → ~/Engram, local).
 
 ## 5. Inbox + sync note
-- Confirm `~/Engram/global/inbox/` exists. Tell the user: drop raw thoughts here as markdown from anywhere; `/engram:triage` files them into the graph. To capture from a phone, point Obsidian (or any sync — iCloud/Dropbox/git) at `~/Engram/global` so the inbox syncs to mobile. Engram doesn't mandate a sync provider.
+- Confirm `~/Engram/inbox/` exists. Tell the user: drop raw thoughts here as markdown from anywhere; `/engram:triage` files them into the graph. To capture from a phone, point Obsidian (or any sync — iCloud/Dropbox/git) at `~/Engram` so the inbox syncs to mobile. Engram mandates no sync provider.
 
 ## 6. Report
-- Summarize: what was installed, the global brain path, the MCP status, the inbox path.
-- Tell the user the next steps: `/engram:adopt` to migrate existing Claude memory in (backs up first), and `/engram:init` inside any repo to create its project brain.
+- Summarize: what was installed, the store path (`~/Engram`), the MCP status, the inbox path.
+- Tell the user: `/engram:adopt` migrates existing Claude memory in (backs up first). No per-repo init is needed — project folders auto-create under `~/Engram/projects/` as you work.
 
 Do NOT migrate or modify any existing Claude memory here — that's `/engram:adopt`, which backs up first.

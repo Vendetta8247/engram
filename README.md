@@ -38,7 +38,7 @@ Prefer to try it alongside native memory first? Run `/engram:setup` (install onl
 | `/engram:adopt` | **The one command to go live.** Self-bootstraps (installs Basic Memory + creates the global brain if needed), then migrates off native memory — backs up everything first, shows the manifest, waits for confirmation, thins the native files, disables native auto-memory. |
 | `/engram:revert` | **The go-back button.** Restore native memory exactly as it was pre-adopt (re-enables native auto-memory, un-thins files, removes the routing directive). Graph preserved unless you ask. |
 | `/engram:setup` | *Optional.* Install + create the global brain *without* taking over native memory — for trying Engram alongside native memory first. (`adopt` does this for you.) |
-| `/engram:init` | *Optional / automatic.* A repo's project brain auto-creates the first time you store project knowledge there — you rarely run this. Use it to set a repo up deliberately + commit the `.mcp.json` pin. |
+| `/engram:init` | *Optional / automatic.* A project's folder (`~/Engram/projects/<name>/`) auto-creates the first time you store project knowledge — you rarely run this. Use it to set a project up deliberately ahead of time. |
 | `/engram:remember <fact>` | Capture a fact into the graph (auto-routes global vs project). |
 | `/engram:recall <query>` | Query + traverse the graph. |
 | `/engram:triage` | Process the capture inbox into the curated graph. |
@@ -48,11 +48,13 @@ Prefer to try it alongside native memory first? Run `/engram:setup` (install onl
 ## How it's laid out
 
 ```
-~/Engram/global/        ← global brain (reusable across projects)
-   workflow/  kmp/  ios/  firebase/  android/
-   inbox/                ← capture inbox (sync to phone via Obsidian/iCloud/git)
-<your-repo>/.engram/     ← project brain (pinned per repo, links up into global)
+~/Engram/                 ← ONE store (open this in Obsidian; one searchable graph)
+   workflow/ kmp/ ios/ android/ tooling/   ← reusable knowledge (top-level domains)
+   projects/
+     habito/  vizix/  ...   ← each project's own facts (config, internals)
+   inbox/                  ← capture inbox (sync to phone via Obsidian/iCloud/git)
 ```
+Everything — global knowledge and every project — lives in `~/Engram`, so a fact from any project is one search away. No per-repo files.
 
 ## Requirements
 
