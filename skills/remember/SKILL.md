@@ -1,6 +1,6 @@
 ---
 name: remember
-description: Capture a fact into the Engram graph, routed to the right tier (global vs project) with proper typed-relation conventions and dedup.
+description: MANUAL OVERRIDE to force-save a specific fact into the Engram graph now. Routine capture is automatic (the agent writes durable learnings on its own — see the using-the-graph skill); use this only when the user explicitly wants something saved.
 argument-hint: "<the fact to remember>"
 allowed-tools: Read AskUserQuestion
 ---

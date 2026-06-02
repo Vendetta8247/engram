@@ -1,6 +1,6 @@
 ---
 name: using-the-graph
-description: How to read from and write to the Engram knowledge graph (the basic-memory MCP). Consult this whenever storing a learning, recalling project/engineering knowledge, or deciding where a fact belongs. Engram is the durable memory; do not write learnings into CLAUDE.md or MEMORY.md.
+description: How the Engram knowledge graph works and how to maintain it AUTOMATICALLY. Memory is ambient — proactively recall relevant knowledge before work and capture durable learnings as you go, without being asked. Read this at session start and whenever storing/recalling. Engram (the basic-memory MCP) is the durable memory; never write learnings into CLAUDE.md or MEMORY.md.
 user-invocable: false
 ---
 
@@ -53,11 +53,26 @@ restating it.
 Use `search` (semantic + full-text) and `build_context` to traverse a note plus
 its linked neighborhood. Prefer following typed relations over re-deriving facts.
 
-## When to consult (without being asked)
+## Automatic, not on-demand (this is the core behavior)
 
-- Before non-trivial work on a project: recall its project brain + linked global
-  knowledge.
-- When you learn a durable fact, a user preference, a gotcha, or a reusable
-  pattern: write it (right tier).
+Memory is **ambient** — you maintain it on your own. The user does NOT have to
+ask you to remember or recall. `/engram:remember` and `/engram:recall` are
+manual overrides; the default is that you do this proactively:
+
+- **Auto-recall** — at session start and before any non-trivial work on a
+  project, `search`/`build_context` the project brain + its linked global
+  knowledge *without being asked*. Lead with what's already known.
+- **Auto-capture** — the moment you learn something durable, write it to the
+  graph immediately, mid-task, without being asked: a user preference, a
+  correction, a gotcha, a decision-and-its-why, a reusable pattern, a runbook.
+  Don't batch it to "later" and don't wait for a command.
+
+**The worth-keeping bar** (so auto-capture stays curated, not noisy) — write it
+only if it is **durable** (still true next week), **reusable** (you'd want it on
+a future task), and **not trivially derivable** from code/config at the moment
+you'd need it. Skip one-off trivia, restated-from-code values, and
+conversation-local detail. When in doubt, a terse note beats none — but a
+pointer beats a duplicated value.
+
 - When a stored fact changes: supersede in place — overwrite the old value and
   delete it. Recency wins; never leave two copies.

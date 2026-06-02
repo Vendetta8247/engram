@@ -1,6 +1,6 @@
 ---
 name: recall
-description: Query and traverse the Engram graph to answer a question from stored project + global knowledge.
+description: MANUAL OVERRIDE to force a lookup in the Engram graph now. Recall is normally automatic (the agent consults the graph before non-trivial work on its own — see the using-the-graph skill); use this to explicitly query stored project + global knowledge.
 argument-hint: "<what to recall>"
 allowed-tools: Read
 ---
