@@ -23,11 +23,11 @@ Engram replaces Claude's ad-hoc memory with a knowledge graph stored as **plain 
 /plugin install engram@engram
 
 # go live — ONE command. Self-bootstraps (installs Basic Memory + builds your
-# the store), backs up all native memory, then migrates it in. Confirm-gated.
+# store), backs up all native memory, then migrates it in. Confirm-gated.
 /engram:adopt
 ```
 
-That's it. Project brains **auto-create** the first time you store knowledge in a repo — you never run `init`. Changed your mind? `/engram:revert` puts native memory back exactly as it was.
+That's it. A project's folder under `projects/` **auto-creates** the first time you store knowledge in that repo — you never run `init`. Changed your mind? `/engram:revert` puts native memory back exactly as it was.
 
 Prefer to try it alongside native memory first? Run `/engram:setup` (install only, no takeover), then `/engram:adopt` when you're ready.
 
