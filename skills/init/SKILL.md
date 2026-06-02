@@ -14,4 +14,4 @@ Precondition: `~/Engram/INDEX.md` exists (Engram is set up). If not, run `/engra
 1. Determine the project name: use `$ARGUMENTS` if given, else the current git repo's folder name (kebab-cased).
 2. Create `~/Engram/projects/<name>/` (only if absent).
 3. Seed `~/Engram/projects/<name>/INDEX.md` — a one-line map-of-content: `- part_of [[INDEX]]` linking up to the global index, plus a title line.
-4. Tell the user: project-specific facts (config, IDs, this app's internals) now land in `~/Engram/projects/<name>/`, and should `- applies_to [[...]]` the reusable global notes (in the top-level domain folders) rather than restating them. No repo files are created — it's all in the central store, so it's searchable alongside every other project.
+4. Tell the user: project-specific facts (config, IDs, this app's internals) now land in `~/Engram/projects/<name>/`, and should `- applies_to [[...]]` the reusable notes under `~/Engram/global/` rather than restating them. No repo files are created — it's all in the central store, so it's searchable alongside every other project.

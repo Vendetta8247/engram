@@ -11,21 +11,24 @@ Engram is the durable memory. It is a graph of markdown notes, served by the
 knowledge, you go here — **not** to `CLAUDE.md` / `MEMORY.md` (those are now
 thin pointers to this graph).
 
-## Two tiers — decide where a fact lives
+## Two buckets — decide where a fact lives
+
+The store has exactly two top-level buckets — **`global/`** and **`projects/`** — so you always know where to point.
 
 | Fact | Goes to |
 |---|---|
-| Reusable across projects (a KMP pattern, how the user works, a general gotcha) | a **top-level domain folder** under `~/Engram` — `workflow/`, `kmp/`, `ios/`, `android/`, `tooling/`, … |
+| Reusable across projects (a KMP pattern, how the user works, a general gotcha) | a domain folder under **`~/Engram/global/`** — `global/workflow/`, `global/kmp/`, `global/ios/`, `global/android/`, `global/tooling/`, … |
 | Specific to ONE project/app (its config, IDs, this app's internals — e.g. a Firebase bucket name) | **`~/Engram/projects/<name>/`** |
 | Derivable cheaply from code/config at point of need | **nowhere** — keep a pointer, re-derive |
 | Raw thought to sort later | the **inbox** (`~/Engram/inbox/`), via `/engram:triage` later |
 
 **Promotion rule:** if a project fact turns out reusable, move it from
-`projects/<name>/` up to the right top-level domain folder and leave a thin
+`projects/<name>/` up to the right `global/<domain>/` folder and leave a thin
 link. One fact, one home — never duplicate.
 
-**It is ONE store — `~/Engram` — not per-repo brains.** Everything (global
-knowledge + every project's facts) lives under `~/Engram`, which is why
+**It is ONE store — `~/Engram` — not per-repo brains.** Everything lives under
+two sibling buckets: `~/Engram/global/` (reusable knowledge, organized into
+domain folders) and `~/Engram/projects/` (one folder per project). That's why
 cross-project recall is a single search. Project-specific facts go in
 `~/Engram/projects/<project-name>/`, where `<project-name>` is the current git
 repo's folder name — create that subfolder automatically the first time you

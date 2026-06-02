@@ -2,7 +2,7 @@
 
 **Durable, graph-shaped memory for Claude Code — your second brain, shared across every project.**
 
-Engram replaces Claude's ad-hoc memory with a knowledge graph stored as **plain markdown** (git-versioned, Obsidian-browsable) and queried by agents over MCP. Two tiers: a **global** brain that carries reusable knowledge across all your projects, and a **project** brain for app-specific facts that links up into it.
+Engram replaces Claude's ad-hoc memory with a knowledge graph stored as **plain markdown** (git-versioned, Obsidian-browsable) and queried by agents over MCP. One store, two buckets: **`global/`** carries reusable knowledge across all your projects, and **`projects/<name>/`** holds app-specific facts that link up into it.
 
 > Built on [Basic Memory](https://github.com/basicmachines-co/basic-memory). Engram packages it into a turnkey Claude Code plugin with a two-tier layout, conventions, a phone-friendly capture inbox, and a safe one-command migration off Claude's native memory.
 
@@ -10,7 +10,7 @@ Engram replaces Claude's ad-hoc memory with a knowledge graph stored as **plain 
 
 - **Future-proof.** Your memory is a folder of markdown files in git. No proprietary database is ever the source of truth. Readable with `cat` in 20 years; openable in Obsidian today.
 - **Graph, not a list.** Entities + typed relations (`uses`, `supersedes`, `applies_to`), so knowledge is *traversable*, not grepped.
-- **Two tiers.** Reusable patterns live once in the global brain; projects link up instead of duplicating.
+- **Two buckets.** Reusable patterns live once in `global/`; each project's facts live in `projects/<name>/` and link up instead of duplicating.
 - **Agents actually consult it.** Session-start briefing + read/write MCP tools mid-task — not "hope it gets recalled."
 - **Capture from anywhere.** A markdown inbox you can sync to your phone (Obsidian or any sync); triage curates it into the graph.
 - **Safe.** Migrating off Claude's native memory backs up *everything* first and waits for your explicit yes.
@@ -49,12 +49,13 @@ Prefer to try it alongside native memory first? Run `/engram:setup` (install onl
 
 ```
 ~/Engram/                 ← ONE store (open this in Obsidian; one searchable graph)
-   workflow/ kmp/ ios/ android/ tooling/   ← reusable knowledge (top-level domains)
+   global/                 ← reusable knowledge, in domain folders
+     workflow/ kmp/ ios/ android/ tooling/ ...
    projects/
      habito/  vizix/  ...   ← each project's own facts (config, internals)
    inbox/                  ← capture inbox (sync to phone via Obsidian/iCloud/git)
 ```
-Everything — global knowledge and every project — lives in `~/Engram`, so a fact from any project is one search away. No per-repo files.
+Two top-level buckets: **`global/`** (reusable across projects) and **`projects/`** (per project). Everything lives in `~/Engram`, so a fact from any project is one search away. No per-repo files.
 
 ## Requirements
 

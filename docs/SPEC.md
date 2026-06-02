@@ -38,10 +38,10 @@ It is installable by anyone via `/` commands, migrates existing Claude memory in
 │  The markdown graph (source of truth, git + Obsidian)         │
 │                                                                │
 │   ~/Engram/   ← ONE store, ONE basic-memory project "engram"  │
-│      workflow/ kmp/ ios/ android/ tooling/  ← reusable (global)│
+│      global/<domain>/   ← reusable (workflow/kmp/ios/...)      │
 │      projects/<name>/   ← each project's facts (config/internals)│
 │      inbox/             ← capture                              │
-│   (project notes [[link]] up into the global domains)         │
+│   (project notes [[link]] up into the global/ domains)        │
 └──────────────────────────────────────────────────────────────┘
 ```
 

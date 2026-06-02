@@ -1,6 +1,6 @@
 ---
 name: setup
-description: OPTIONAL install-only bootstrap — install Basic Memory, wire the MCP, create the global brain + inbox, WITHOUT taking over native memory. Use this to try Engram alongside native memory first. Most users can skip straight to /engram:adopt, which self-bootstraps this. Idempotent.
+description: OPTIONAL install-only bootstrap — install Basic Memory, wire the MCP, create the store (global/ + projects/ buckets) + inbox, WITHOUT taking over native memory. Use this to try Engram alongside native memory first. Most users can skip straight to /engram:adopt, which self-bootstraps this. Idempotent.
 argument-hint: ""
 allowed-tools: Bash Read AskUserQuestion
 ---
@@ -18,12 +18,12 @@ Set up Engram on this machine. **Idempotent** — re-running must not clobber ex
 - Verify: `basic-memory --version`. The MCP server is declared in the plugin's `.mcp.json` (`uvx basic-memory mcp`) and starts when the plugin is enabled — confirm it shows up under `/mcp` after setup (mention this to the user).
 
 ## 3. Create the ONE store (~/Engram)
-Everything lives under `~/Engram` — reusable knowledge in top-level domain folders, every project's facts under `projects/<name>/`. There are no per-repo brains.
+Everything lives under `~/Engram`, split into exactly two top-level buckets: **`global/`** (reusable knowledge, in domain folders) and **`projects/`** (one folder per project). There are no per-repo brains.
 - Create the directory tree (only if absent — never overwrite):
-  `~/Engram/{workflow,kmp,ios,android,tooling}`, `~/Engram/projects`, and `~/Engram/inbox`.
-  (Note: project config like Firebase IDs/buckets is per-project → it lives under `projects/<name>/`, not a global `firebase/` domain.)
+  `~/Engram/global/{workflow,kmp,ios,android,tooling}`, `~/Engram/projects`, and `~/Engram/inbox`.
+  (Note: project config like Firebase IDs/buckets is per-project → it lives under `projects/<name>/`, not a `global/firebase/` domain.)
 - `git init` `~/Engram` if it isn't already a repo; add a `.gitignore` for `.obsidian/` and OS cruft; initial commit.
-- Seed `~/Engram/INDEX.md` — a short map-of-content listing the global domains + a Projects section. (This file is also the "Engram is set up" sentinel the hooks check.)
+- Seed `~/Engram/INDEX.md` — a short map-of-content listing the `global/` domains + a `projects/` section. (This file is also the "Engram is set up" sentinel the hooks check.)
 
 ## 4. Register the single Basic Memory project
 - Discover the exact CLI first: `basic-memory project --help` (subcommand names can change — adapt).
