@@ -1,6 +1,6 @@
 ---
 name: setup
-description: One-time Engram bootstrap — install Basic Memory, wire the MCP, and create the global brain + capture inbox. Idempotent; safe to re-run.
+description: OPTIONAL install-only bootstrap — install Basic Memory, wire the MCP, create the global brain + inbox, WITHOUT taking over native memory. Use this to try Engram alongside native memory first. Most users can skip straight to /engram:adopt, which self-bootstraps this. Idempotent.
 argument-hint: ""
 allowed-tools: Bash Read AskUserQuestion
 ---

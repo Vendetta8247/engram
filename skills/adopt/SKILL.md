@@ -9,7 +9,11 @@ allowed-tools: Bash Read Edit Write AskUserQuestion
 
 Move the user's existing Claude memory into the Engram graph and reduce the native files to thin pointers. This is **two-phase and safety-critical**: back up + confirm, *then* act. Never skip a beat.
 
-Precondition: `/engram:setup` has run (the global brain + basic-memory MCP exist). If `~/.engram/global` is missing, stop and tell the user to run `/engram:setup` first.
+This is the single command to go fully live — it **self-bootstraps**, so the user does NOT need to run `/engram:setup` first.
+
+## Phase 0 — ENSURE ENGRAM IS INSTALLED (self-bootstrap)
+
+If `~/.engram/global` does not exist yet, run the `/engram:setup` steps inline first (install Basic Memory, wire the MCP, create the global brain + inbox). If it already exists, skip — it's done. Only after the engine + global brain exist do you proceed to the backup. (`/engram:setup` still exists as a standalone, optional path for users who want to install Engram and try it *alongside* native memory before adopting — but adopt no longer requires it.)
 
 ## Phase 1 — BACK UP EVERYTHING (always, first, no exceptions)
 

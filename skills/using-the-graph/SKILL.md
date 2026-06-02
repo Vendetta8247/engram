@@ -23,6 +23,16 @@ thin pointers to this graph).
 **Promotion rule:** if a project fact turns out reusable, move it to global and
 leave the project note as a thin link. One fact, one home — never duplicate.
 
+**Project brains auto-create — the user never runs `/engram:init`.** When you are
+about to store project-specific knowledge while working in a repo that has no
+Engram project brain yet, **create one first, automatically, without being
+asked**: do the `/engram:init` steps (make `<repo>/.engram/`, register the
+basic-memory project, write/merge the `.mcp.json` pin, seed an index note that
+`applies_to` the global index), then write the note. Do this lazily — only when
+there's actually project knowledge to store, so repos you merely browse don't
+get an empty brain. `/engram:init` remains as a manual option for deliberately
+setting a repo up (and committing the `.mcp.json` pin) ahead of time.
+
 ## How to write (basic-memory MCP tools)
 
 Use `write_note` / `edit_note`. Before writing, `search` the graph — if the

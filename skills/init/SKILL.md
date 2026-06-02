@@ -1,6 +1,6 @@
 ---
 name: init
-description: Initialize the current repo as an Engram project brain — a project-tier knowledge base pinned to this repo that links up into the global brain.
+description: OPTIONAL manual setup of the current repo's project brain. Normally this happens AUTOMATICALLY — the agent auto-creates a repo's project brain the first time it stores project knowledge there (see using-the-graph), so you rarely run this. Use it to deliberately set a repo up + commit the .mcp.json pin ahead of time.
 argument-hint: "[project-name]"
 allowed-tools: Bash Read Write
 ---

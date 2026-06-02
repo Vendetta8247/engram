@@ -22,23 +22,23 @@ Engram replaces Claude's ad-hoc memory with a knowledge graph stored as **plain 
 /plugin marketplace add vendetta8247/engram
 /plugin install engram@engram
 
-# one-time bootstrap (installs Basic Memory, wires the MCP, creates your global brain + inbox)
-/engram:setup
-
-# (optional) migrate your existing Claude memory in — backs everything up first
+# go live — ONE command. Self-bootstraps (installs Basic Memory + builds your
+# global brain), backs up all native memory, then migrates it in. Confirm-gated.
 /engram:adopt
 ```
 
-Per project, run `/engram:init` inside the repo to create its project brain.
+That's it. Project brains **auto-create** the first time you store knowledge in a repo — you never run `init`. Changed your mind? `/engram:revert` puts native memory back exactly as it was.
+
+Prefer to try it alongside native memory first? Run `/engram:setup` (install only, no takeover), then `/engram:adopt` when you're ready.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `/engram:setup` | One-time bootstrap: install Basic Memory, register the MCP, create the global brain + inbox. Idempotent. |
-| `/engram:adopt` | **Turn Engram on (the "init").** Migrate off Claude's native memory — backs up everything first, shows the manifest, waits for confirmation, then migrates + thins the native files + disables native auto-memory. |
-| `/engram:revert` | **Turn Engram off (the "deinit").** Restore native memory exactly as it was pre-adopt (re-enables native auto-memory, un-thins files, removes the routing directive). Graph preserved unless you ask. Your go-back button. |
-| `/engram:init` | Initialize the current **repo** as a project brain (links up to global). Note: this is *project-scoped* init, not the global on-switch — that's `adopt`. |
+| `/engram:adopt` | **The one command to go live.** Self-bootstraps (installs Basic Memory + creates the global brain if needed), then migrates off native memory — backs up everything first, shows the manifest, waits for confirmation, thins the native files, disables native auto-memory. |
+| `/engram:revert` | **The go-back button.** Restore native memory exactly as it was pre-adopt (re-enables native auto-memory, un-thins files, removes the routing directive). Graph preserved unless you ask. |
+| `/engram:setup` | *Optional.* Install + create the global brain *without* taking over native memory — for trying Engram alongside native memory first. (`adopt` does this for you.) |
+| `/engram:init` | *Optional / automatic.* A repo's project brain auto-creates the first time you store project knowledge there — you rarely run this. Use it to set a repo up deliberately + commit the `.mcp.json` pin. |
 | `/engram:remember <fact>` | Capture a fact into the graph (auto-routes global vs project). |
 | `/engram:recall <query>` | Query + traverse the graph. |
 | `/engram:triage` | Process the capture inbox into the curated graph. |

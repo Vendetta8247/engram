@@ -17,3 +17,12 @@ if [ -d "$INBOX" ]; then
     echo "📥 You have ${n} uncaptured thought(s) in the Engram inbox — run /engram:triage to file them into the graph."
   fi
 fi
+
+# Auto-init signal: if we're in a git repo with no project brain yet, the agent
+# should auto-create one on first project capture (never make the user run init).
+if git rev-parse --show-toplevel >/dev/null 2>&1; then
+  ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+  if [ -n "$ROOT" ] && [ ! -d "$ROOT/.engram" ]; then
+    echo "ℹ️ This repo has no Engram project brain yet. Auto-create one (the /engram:init steps) the first time you store project-specific knowledge here — the user should never have to run init manually."
+  fi
+fi

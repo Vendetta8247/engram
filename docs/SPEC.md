@@ -72,7 +72,8 @@ All namespaced (`/engram:<cmd>`). The two the user explicitly called out — **i
 
 | Command | Does |
 |---|---|
-| `/engram:setup` | **One-shot bootstrap.** Check prereqs (uv/uvx, node, git). Install Basic Memory. Register the global MCP (user scope). Create the global graph at `~/.engram/global` + `git init` it. Install Basic Memory's CC plugin hooks. Idempotent — safe to re-run. |
+| `/engram:adopt` ⭐ | **The one command to go live — self-bootstraps.** If not yet installed, runs setup inline (install Basic Memory, MCP, global brain) first, then proceeds to the backup+migrate flow below. So users never need a separate setup step. |
+| `/engram:setup` | *Optional, install-only.* Check prereqs (uv, git). Install Basic Memory. Register the global MCP. Create `~/.engram/global` + `git init`. For trying Engram **alongside** native memory before adopting. `adopt` does this automatically. Idempotent. |
 | `/engram:adopt` | **Replace native Claude memory — backup first.** (1) Snapshot EVERYTHING: `~/.claude/CLAUDE.md`, `settings.json`(+local), every `~/.claude/projects/*/memory/`, project `CLAUDE.md`s → timestamped tarball **and** git commit. (2) Print the manifest. (3) **Require explicit "yes".** (4) Migrate notes into the graph (route global vs project). (5) Thin native `MEMORY.md`/`CLAUDE.md` bodies to pointers. (6) **Disable native auto-memory** (`autoMemoryEnabled: false` in `~/.claude/settings.json`). (7) **Install the global routing directive** in `~/.claude/CLAUDE.md`. Fully reversible from the snapshot. |
 
 ### How Engram owns the "remember" verb (defense-in-depth)
@@ -87,7 +88,7 @@ No single instruction-driven mechanism is guaranteed, so the routing is layered,
 
 If layer 1 is active, the rest are belt-and-suspenders; if a user declines disabling native memory, layers 2–5 still route the verb.
 | `/engram:revert` | **The "deinit" — undo `adopt`.** Restore native Claude memory from the pre-adopt backup: re-enable native auto-memory (`autoMemoryEnabled`), un-thin the native `MEMORY.md`/`CLAUDE.md`, remove the routing directive. Graph preserved by default (re-adopting stays trivial); optional full wipe on a second explicit yes. Full plugin removal is Claude Code's `/plugin uninstall engram`. The reversible partner to `adopt`. |
-| `/engram:init` | Initialize the **current repo** as a project tier: create `<repo>/.engram/`, add a Basic Memory project, write a committed `.mcp.json` pinning `BASIC_MEMORY_MCP_PROJECT`, seed an index/MOC note linking up to global. *(Project-scoped init — not the global on-switch, which is `adopt`.)* |
+| `/engram:init` | *Optional / automatic.* Initialize the **current repo** as a project tier: create `<repo>/.engram/`, add a Basic Memory project, write a committed `.mcp.json` pin, seed an index linking up to global. **Normally runs automatically** — the agent auto-creates a repo's project brain (lazily, on first project capture) per the `using-the-graph` rule, so the user rarely invokes this. Manual use = set a repo up deliberately + commit the pin ahead of time. *(Project-scoped — not the global on-switch, which is `adopt`.)* |
 | `/engram:remember <fact>` | Capture a fact as a graph note. Auto-routes global vs project (asks if ambiguous), applies the typed-relation conventions, dedupes against existing notes. |
 | `/engram:recall <query>` | Query + traverse the graph (semantic + full-text + link-following) and summarize. |
 | `/engram:status` | Show: engine health, current project + tier, note counts per domain, last backup timestamp. |
