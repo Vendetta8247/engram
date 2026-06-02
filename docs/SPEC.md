@@ -73,7 +73,7 @@ All namespaced (`/engram:<cmd>`). The two the user explicitly called out — **i
 
 | Command | Does |
 |---|---|
-| `/engram:adopt` ⭐ | **The one command to go live — self-bootstraps.** If not yet installed, runs setup inline (install Basic Memory, MCP, global brain) first, then proceeds to the backup+migrate flow below. So users never need a separate setup step. |
+| `/engram:adopt` ⭐ | **The one command to go live — self-bootstraps.** If not yet installed, runs setup inline (install Basic Memory, MCP, the store) first, then proceeds to the backup+migrate flow below. So users never need a separate setup step. |
 | `/engram:setup` | *Optional, install-only.* Check prereqs (uv, git). Install Basic Memory. Register the global MCP. Create `~/Engram` + `git init`. For trying Engram **alongside** native memory before adopting. `adopt` does this automatically. Idempotent. |
 | `/engram:adopt` | **Replace native Claude memory — backup first.** (1) Snapshot EVERYTHING: `~/.claude/CLAUDE.md`, `settings.json`(+local), every `~/.claude/projects/*/memory/`, project `CLAUDE.md`s → timestamped tarball **and** git commit. (2) Print the manifest. (3) **Require explicit "yes".** (4) Migrate notes into the graph (route global vs project). (5) Thin native `MEMORY.md`/`CLAUDE.md` bodies to pointers. (6) **Disable native auto-memory** (`autoMemoryEnabled: false` in `~/.claude/settings.json`). (7) **Install the global routing directive** in `~/.claude/CLAUDE.md`. Fully reversible from the snapshot. |
 

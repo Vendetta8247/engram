@@ -23,7 +23,7 @@ Engram replaces Claude's ad-hoc memory with a knowledge graph stored as **plain 
 /plugin install engram@engram
 
 # go live — ONE command. Self-bootstraps (installs Basic Memory + builds your
-# global brain), backs up all native memory, then migrates it in. Confirm-gated.
+# the store), backs up all native memory, then migrates it in. Confirm-gated.
 /engram:adopt
 ```
 
@@ -35,9 +35,9 @@ Prefer to try it alongside native memory first? Run `/engram:setup` (install onl
 
 | Command | What it does |
 |---|---|
-| `/engram:adopt` | **The one command to go live.** Self-bootstraps (installs Basic Memory + creates the global brain if needed), then migrates off native memory — backs up everything first, shows the manifest, waits for confirmation, thins the native files, disables native auto-memory. |
+| `/engram:adopt` | **The one command to go live.** Self-bootstraps (installs Basic Memory + builds the store if needed), then migrates off native memory — backs up everything first, shows the manifest, waits for confirmation, thins the native files, disables native auto-memory. |
 | `/engram:revert` | **The go-back button.** Restore native memory exactly as it was pre-adopt (re-enables native auto-memory, un-thins files, removes the routing directive). Graph preserved unless you ask. |
-| `/engram:setup` | *Optional.* Install + create the global brain *without* taking over native memory — for trying Engram alongside native memory first. (`adopt` does this for you.) |
+| `/engram:setup` | *Optional.* Install + create the store *without* taking over native memory — for trying Engram alongside native memory first. (`adopt` does this for you.) |
 | `/engram:init` | *Optional / automatic.* A project's folder (`~/Engram/projects/<name>/`) auto-creates the first time you store project knowledge — you rarely run this. Use it to set a project up deliberately ahead of time. |
 | `/engram:remember <fact>` | Capture a fact into the graph (auto-routes global vs project). |
 | `/engram:recall <query>` | Query + traverse the graph. |
