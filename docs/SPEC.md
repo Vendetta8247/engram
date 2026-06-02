@@ -1,6 +1,6 @@
 # Engram — Spec v0.2 (Foundations)
 
-> **Name: Engram** (confirmed). **Distribution: public from day one** — plugin code MIT-licensed; Basic Memory is an AGPL *dependency* the plugin installs (not redistributed), so no license bleed. **Global store: local for now** (`~/.engram/`, `git init`'d for history but no remote yet — cross-machine sync deferred by choice).
+> **Name: Engram** (confirmed). **Distribution: public from day one** — plugin code MIT-licensed; Basic Memory is an AGPL *dependency* the plugin installs (not redistributed), so no license bleed. **Global store: local for now** (`~/Engram/`, `git init`'d for history but no remote yet — cross-machine sync deferred by choice).
 
 ## 1. What it is
 
@@ -37,7 +37,7 @@ It is installable by anyone via `/` commands, migrates existing Claude memory in
 ┌──────────────────────────────────────────────────────────────┐
 │  The markdown graph (source of truth, git + Obsidian)         │
 │                                                                │
-│   ~/.engram/global/        ← global tier (default project)    │
+│   ~/Engram/global/        ← global tier (default project)    │
 │      workflow/  kmp/  ios/  firebase/  android/               │
 │   <repo>/.engram/          ← project tier (pinned per repo)   │
 │      notes that [[link]] up into global                       │
@@ -73,7 +73,7 @@ All namespaced (`/engram:<cmd>`). The two the user explicitly called out — **i
 | Command | Does |
 |---|---|
 | `/engram:adopt` ⭐ | **The one command to go live — self-bootstraps.** If not yet installed, runs setup inline (install Basic Memory, MCP, global brain) first, then proceeds to the backup+migrate flow below. So users never need a separate setup step. |
-| `/engram:setup` | *Optional, install-only.* Check prereqs (uv, git). Install Basic Memory. Register the global MCP. Create `~/.engram/global` + `git init`. For trying Engram **alongside** native memory before adopting. `adopt` does this automatically. Idempotent. |
+| `/engram:setup` | *Optional, install-only.* Check prereqs (uv, git). Install Basic Memory. Register the global MCP. Create `~/Engram/global` + `git init`. For trying Engram **alongside** native memory before adopting. `adopt` does this automatically. Idempotent. |
 | `/engram:adopt` | **Replace native Claude memory — backup first.** (1) Snapshot EVERYTHING: `~/.claude/CLAUDE.md`, `settings.json`(+local), every `~/.claude/projects/*/memory/`, project `CLAUDE.md`s → timestamped tarball **and** git commit. (2) Print the manifest. (3) **Require explicit "yes".** (4) Migrate notes into the graph (route global vs project). (5) Thin native `MEMORY.md`/`CLAUDE.md` bodies to pointers. (6) **Disable native auto-memory** (`autoMemoryEnabled: false` in `~/.claude/settings.json`). (7) **Install the global routing directive** in `~/.claude/CLAUDE.md`. Fully reversible from the snapshot. |
 
 ### How Engram owns the "remember" verb (defense-in-depth)
@@ -92,13 +92,13 @@ If layer 1 is active, the rest are belt-and-suspenders; if a user declines disab
 | `/engram:remember <fact>` | Capture a fact as a graph note. Auto-routes global vs project (asks if ambiguous), applies the typed-relation conventions, dedupes against existing notes. |
 | `/engram:recall <query>` | Query + traverse the graph (semantic + full-text + link-following) and summarize. |
 | `/engram:status` | Show: engine health, current project + tier, note counts per domain, last backup timestamp. |
-| `/engram:backup` | Manual snapshot of the whole graph (+ native memory) to `~/.engram/backups/`. |
+| `/engram:backup` | Manual snapshot of the whole graph (+ native memory) to `~/Engram/backups/`. |
 
 Safety rule: `adopt` and any overwrite are **two-phase** — back up + show + confirm, then act. Never destructive on the first beat.
 
 ## 6. The two-tier model + linking
 
-- **Global** (`~/.engram/global`, the Basic Memory `default_project`): cross-project truth.
+- **Global** (`~/Engram/global`, the Basic Memory `default_project`): cross-project truth.
   - `workflow/` — how we work (preferences, runbooks, the destructive-ops ban, stage-vs-live rules).
   - `kmp/`, `ios/`, `android/`, `firebase/` — reusable engineering patterns (KMP localization, theming, SQLDelight flow, expect/actual; iOS StoreKit; Firebase stage/live).
 - **Project** (`<repo>/.engram`, pinned via `.mcp.json` env `BASIC_MEMORY_MCP_PROJECT`): app-specific facts.
@@ -120,7 +120,7 @@ Bundled as a skill so every agent follows the same rules.
 
 A frictionless place to dump a raw thought from anywhere (phone, mid-flow) that later gets triaged into the curated graph. Generalizes the old "UNSORTED THOUGHTS → Discussions" pipeline and makes it sync-agnostic + shareable.
 
-- **The inbox is just markdown** in the graph: `~/.engram/global/inbox/` (one file per thought, or a single appendable `inbox.md`). No special format — type a line, done.
+- **The inbox is just markdown** in the graph: `~/Engram/global/inbox/` (one file per thought, or a single appendable `inbox.md`). No special format — type a line, done.
 - **Sync is the user's choice — Engram mandates none.** Because the inbox is plain markdown on disk, any sync works: **Obsidian mobile** (recommended) over iCloud Drive / Dropbox / a git remote (Working Copy on iOS) / Obsidian Sync. The phone edits the same files the agent reads. Engram ships docs for the common setups; it does not lock you to a provider.
 - **Triage flow** (the curation step, agent-assisted):
   - `/engram:triage` — read the inbox, surface each new item, and help file it: promote to a graph note (global vs project, typed relations), park it, or drop it with a note. Clears the inbox as items are filed. This is the old `UNSORTED THOUGHTS → Discussions` move, generalized.
@@ -137,13 +137,13 @@ A frictionless place to dump a raw thought from anywhere (phone, mid-flow) that 
 - every discoverable project `CLAUDE.md`
 - (optional) a copy of the current Obsidian vault(s)
 
-→ written to `~/.engram/backups/<timestamp>/` as a tarball **and** committed to a git repo there. The command prints the manifest and the restore command, then waits for explicit confirmation before migrating/replacing. A `/engram:restore <timestamp>` (v0.2) reverses it.
+→ written to `~/Engram/backups/<timestamp>/` as a tarball **and** committed to a git repo there. The command prints the manifest and the restore command, then waits for explicit confirmation before migrating/replacing. A `/engram:restore <timestamp>` (v0.2) reverses it.
 
 ## 10. Decisions (ratified) + what's left
 
 **Ratified:**
 1. **Name** — Engram. ✓
-2. **Global store** — local `~/.engram/`, `git init`'d (history/safety) but **no remote** for now. Cross-machine sync revisited later. ✓
+2. **Global store** — local `~/Engram/`, `git init`'d (history/safety) but **no remote** for now. Cross-machine sync revisited later. ✓
 3. **Capture inbox** — a first-class component (§8), sync-agnostic, phone-friendly. The old `UNSORTED THOUGHTS` pipeline is *not* carried over verbatim (it was lost in the PC migration) but its *role* is rebuilt here, generalized. ✓
 4. **Distribution** — public from day one; plugin MIT, Basic Memory AGPL dependency. ✓
 
@@ -154,7 +154,7 @@ A frictionless place to dump a raw thought from anywhere (phone, mid-flow) that 
 
 ### Build order
 1. **Scaffold the plugin repo** (`~/Coding/engram/`): manifest, marketplace.json, dir skeleton, MIT license, README, move this spec to `docs/`.
-2. **`/engram:setup`** — install Basic Memory + register global MCP + create `~/.engram/global` (git init) + the inbox folder.
+2. **`/engram:setup`** — install Basic Memory + register global MCP + create `~/Engram/global` (git init) + the inbox folder.
 3. **`/engram:adopt`** — the safety-critical one: backup-everything → confirm → migrate → thin native files to pointers.
 4. **`/engram:init`, `remember`, `recall`, `triage`, `status`, `backup`.**
 5. **Dogfood on Habeeto:** migrate the keepers as the first project tier; extract reusable KMP knowledge into `global/kmp/` as the first global domain.

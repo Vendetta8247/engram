@@ -3,7 +3,7 @@
 # unprocessed capture inbox. Stays silent if Engram isn't set up yet.
 set -uo pipefail
 
-GLOBAL="${HOME}/.engram/global"
+GLOBAL="${HOME}/Engram/global"
 INBOX="${GLOBAL}/inbox"
 
 # Not set up yet → say nothing.

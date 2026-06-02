@@ -7,14 +7,14 @@
 #   - ~/.claude/projects/*/memory/         (all project auto-memories + indexes)
 #   - ~/.claude/projects/*/MEMORY.md       (any stray top-level indexes)
 # Output:
-#   ~/.engram/backups/<UTC-timestamp>/{tree copy, manifest.txt, backup.tar.gz}
+#   ~/Engram/backups/<UTC-timestamp>/{tree copy, manifest.txt, backup.tar.gz}
 #
 # Usage: bash engram-backup.sh
 set -euo pipefail
 
 CLAUDE_DIR="${HOME}/.claude"
 STAMP="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
-DEST="${HOME}/.engram/backups/${STAMP}"
+DEST="${HOME}/Engram/backups/${STAMP}"
 mkdir -p "${DEST}/tree"
 
 MANIFEST="${DEST}/manifest.txt"

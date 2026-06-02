@@ -48,7 +48,7 @@ Prefer to try it alongside native memory first? Run `/engram:setup` (install onl
 ## How it's laid out
 
 ```
-~/.engram/global/        ← global brain (reusable across projects)
+~/Engram/global/        ← global brain (reusable across projects)
    workflow/  kmp/  ios/  firebase/  android/
    inbox/                ← capture inbox (sync to phone via Obsidian/iCloud/git)
 <your-repo>/.engram/     ← project brain (pinned per repo, links up into global)

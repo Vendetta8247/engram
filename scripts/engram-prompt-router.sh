@@ -11,7 +11,7 @@
 set -uo pipefail
 
 INPUT="$(cat)"   # hook input JSON on stdin
-[ -d "${HOME}/.engram/global" ] || exit 0
+[ -d "${HOME}/Engram/global" ] || exit 0
 
 PROMPT="$(printf '%s' "$INPUT" | jq -r '.prompt // .user_prompt // empty' 2>/dev/null)"
 [ -n "$PROMPT" ] || exit 0

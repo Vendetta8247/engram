@@ -7,7 +7,7 @@ allowed-tools: Bash Read Write
 
 # /engram:init — create this repo's project brain
 
-Precondition: `/engram:setup` has run. If `~/.engram/global` is missing, tell the user to run `/engram:setup` first.
+Precondition: `/engram:setup` has run. If `~/Engram/global` is missing, tell the user to run `/engram:setup` first.
 
 1. Determine the project name: use `$ARGUMENTS` if given, else the repo directory name (kebab-cased).
 2. Create the project store at `<repo>/.engram/` (only if absent). Add `INDEX.md` (a short map-of-content seeded with one line: `- applies_to [[INDEX]]` pointing at the global index).

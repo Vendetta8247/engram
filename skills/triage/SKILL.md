@@ -9,7 +9,7 @@ allowed-tools: Bash Read AskUserQuestion
 
 The inbox is raw, frictionless capture (often from a phone). Curating it into the graph is a separate job — this command.
 
-1. List inbox items: files under `~/.engram/global/inbox/` (`*.md`, `*.txt`). If empty, say so and stop.
+1. List inbox items: files under `~/Engram/global/inbox/` (`*.md`, `*.txt`). If empty, say so and stop.
 2. For EACH item, read it and surface it to the user with a proposed disposition:
    - **File it** → write a graph note (route global vs project per the `using-the-graph` skill, dedup first), then remove the inbox file.
    - **Park it** → leave in inbox (or move to an `inbox/parked/` subfolder) with a one-line note on why.
