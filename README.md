@@ -36,8 +36,9 @@ Per project, run `/engram:init` inside the repo to create its project brain.
 | Command | What it does |
 |---|---|
 | `/engram:setup` | One-time bootstrap: install Basic Memory, register the MCP, create the global brain + inbox. Idempotent. |
-| `/engram:adopt` | Migrate off Claude's native memory — **backs up everything first**, shows the manifest, waits for confirmation, then migrates + thins the native files to pointers. Reversible. |
-| `/engram:init` | Initialize the current repo as a project brain (links up to global). |
+| `/engram:adopt` | **Turn Engram on (the "init").** Migrate off Claude's native memory — backs up everything first, shows the manifest, waits for confirmation, then migrates + thins the native files + disables native auto-memory. |
+| `/engram:revert` | **Turn Engram off (the "deinit").** Restore native memory exactly as it was pre-adopt (re-enables native auto-memory, un-thins files, removes the routing directive). Graph preserved unless you ask. Your go-back button. |
+| `/engram:init` | Initialize the current **repo** as a project brain (links up to global). Note: this is *project-scoped* init, not the global on-switch — that's `adopt`. |
 | `/engram:remember <fact>` | Capture a fact into the graph (auto-routes global vs project). |
 | `/engram:recall <query>` | Query + traverse the graph. |
 | `/engram:triage` | Process the capture inbox into the curated graph. |

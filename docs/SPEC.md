@@ -86,7 +86,8 @@ No single instruction-driven mechanism is guaranteed, so the routing is layered,
 5. **Skill auto-invocation.** `remember`/`recall` skill `description` + `when_to_use` trigger phrases bias the model to pick them on natural-language memory requests.
 
 If layer 1 is active, the rest are belt-and-suspenders; if a user declines disabling native memory, layers 2–5 still route the verb.
-| `/engram:init` | Initialize the **current repo** as a project tier: create `<repo>/.engram/`, add a Basic Memory project, write a committed `.mcp.json` pinning `BASIC_MEMORY_MCP_PROJECT`, seed an index/MOC note linking up to global. |
+| `/engram:revert` | **The "deinit" — undo `adopt`.** Restore native Claude memory from the pre-adopt backup: re-enable native auto-memory (`autoMemoryEnabled`), un-thin the native `MEMORY.md`/`CLAUDE.md`, remove the routing directive. Graph preserved by default (re-adopting stays trivial); optional full wipe on a second explicit yes. Full plugin removal is Claude Code's `/plugin uninstall engram`. The reversible partner to `adopt`. |
+| `/engram:init` | Initialize the **current repo** as a project tier: create `<repo>/.engram/`, add a Basic Memory project, write a committed `.mcp.json` pinning `BASIC_MEMORY_MCP_PROJECT`, seed an index/MOC note linking up to global. *(Project-scoped init — not the global on-switch, which is `adopt`.)* |
 | `/engram:remember <fact>` | Capture a fact as a graph note. Auto-routes global vs project (asks if ambiguous), applies the typed-relation conventions, dedupes against existing notes. |
 | `/engram:recall <query>` | Query + traverse the graph (semantic + full-text + link-following) and summarize. |
 | `/engram:status` | Show: engine health, current project + tier, note counts per domain, last backup timestamp. |
