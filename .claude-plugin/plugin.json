@@ -1,0 +1,13 @@
+{
+  "name": "engram",
+  "displayName": "Engram",
+  "version": "0.1.0",
+  "description": "Durable, graph-shaped, two-tier memory for Claude Code — plain markdown + git + Obsidian, queried over MCP. Replaces Claude's ad-hoc memory with a portable second brain shared across every project.",
+  "author": {
+    "name": "Yegor Yeriomin"
+  },
+  "license": "MIT",
+  "keywords": ["memory", "knowledge-graph", "obsidian", "markdown", "basic-memory", "second-brain", "mcp"],
+  "homepage": "https://github.com/vendetta8247/engram",
+  "repository": "https://github.com/vendetta8247/engram"
+}

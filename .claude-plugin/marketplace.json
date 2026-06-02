@@ -1,0 +1,15 @@
+{
+  "name": "engram",
+  "owner": {
+    "name": "Yegor Yeriomin"
+  },
+  "description": "Engram — durable graph-shaped memory for Claude Code.",
+  "plugins": [
+    {
+      "name": "engram",
+      "source": "./",
+      "description": "Durable, graph-shaped, two-tier memory for Claude Code (markdown + git + Obsidian over MCP).",
+      "version": "0.1.0"
+    }
+  ]
+}
