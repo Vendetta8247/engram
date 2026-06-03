@@ -35,10 +35,10 @@ Prefer to try it alongside native memory first? Run `/engram:setup` (install onl
 
 | Command | What it does |
 |---|---|
-| `/engram:adopt` | **The one command to go live.** Self-bootstraps (installs Basic Memory + builds the store if needed), then migrates off native memory — backs up everything first, shows the manifest, waits for confirmation, thins the native files, disables native auto-memory. |
+| `/engram:adopt` | **The one command to go live.** Self-bootstraps (installs Basic Memory + builds the store if needed), then migrates off native memory — backs up everything first, shows the manifest, waits for confirmation, thins the native files, disables native auto-memory. If you're in an established codebase with no KB yet, it then **offers a full project scan** (pick the engine — single agent / multiple agents / workflow). |
 | `/engram:revert` | **The go-back button.** Restore native memory exactly as it was pre-adopt (re-enables native auto-memory, un-thins files, removes the routing directive). Graph preserved unless you ask. |
 | `/engram:setup` | *Optional.* Install + create the store *without* taking over native memory — for trying Engram alongside native memory first. (`adopt` does this for you.) |
-| `/engram:scan` | **Onboard a project — build a comprehensive KB in one pass.** Surveys the repo (product/PM overview, systems, screens, architecture, data model) via a documentation workflow and writes it into `projects/<name>/`. Offered automatically when a repo has no KB yet (it asks first); also run it to refresh after big changes. |
+| `/engram:scan` | **Onboard a project — build a comprehensive PM-style KB in one pass.** Surveys the repo (product/PM overview, systems, screens, architecture, data model) and writes it into `projects/<name>/`. Pick the **depth** (overview / map / exhaustive) and **engine** (single agent / multiple agents / workflow). Offered automatically when a repo has no KB yet (it asks first); also run it to refresh after big changes. |
 | `/engram:init` | *Optional / automatic.* A project's folder (`~/Engram/projects/<name>/`) auto-creates the first time you store project knowledge — you rarely run this. Use it to set a project up deliberately ahead of time. |
 | `/engram:remember <fact>` | Capture a fact into the graph (auto-routes global vs project). |
 | `/engram:recall <query>` | Query + traverse the graph. |

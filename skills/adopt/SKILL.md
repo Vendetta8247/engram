@@ -1,8 +1,8 @@
 ---
 name: adopt
-description: Migrate off Claude's native memory into the Engram graph. Backs up EVERYTHING first, shows the manifest, and requires explicit confirmation before migrating or replacing anything. Reversible.
+description: Migrate off Claude's native memory into the Engram graph. Backs up EVERYTHING first, shows the manifest, and requires explicit confirmation before migrating or replacing anything. Then offers to build a full project-manager-style KB for the current codebase (single agent / multiple agents / workflow). Reversible.
 argument-hint: ""
-allowed-tools: Bash Read Edit Write AskUserQuestion
+allowed-tools: Bash Read Edit Write Glob Grep AskUserQuestion Agent Workflow
 ---
 
 # /engram:adopt — migrate native Claude memory into Engram (backup-first)
@@ -42,9 +42,19 @@ If `~/Engram/INDEX.md` does not exist yet (Engram not set up), run the `/engram:
    > Durable memory is the Engram knowledge graph (basic-memory MCP), not native memory. When asked to remember / note / save / keep in mind / don't forget anything → write it to Engram (right tier). When asked what's known/decided → query Engram. Native auto-memory is disabled.
    Merge, don't overwrite — preserve the user's existing global instructions.
 
+## Phase 3.5 — OFFER A PROJECT SCAN (if in an established codebase)
+
+Migrating native memory above moves *remembered facts* into Engram. This step is different: it documents the **current codebase itself**. After the migration, look at the working directory:
+
+- `<name>` = the current git repo's folder (kebab-case).
+- If it's an **established codebase** (real source, not an empty/throwaway dir) AND `~/Engram/projects/<name>/` has no substantive KB yet → **PROMPT the user** (AskUserQuestion): build a full **project-manager-style knowledge base** for this project now, as part of going live? — the same comprehensive scan Habeeto got (product/PM overview + systems + screens + architecture + data model), not a bug audit.
+  - If **yes**: ask for **depth** (Overview / Map / Exhaustive) and **engine** (Single agent / Multiple agents / Workflow), then run the **`/engram:scan` Phase 1 → Phase 2** flow with those choices. Recommend **Workflow + Exhaustive** for a large established project; Single/Multiple for small ones.
+  - If **skip**: fine — the project folder auto-fills as you work, or they can run `/engram:scan` anytime.
+- **Never scan unprompted** — always offer. (If the current dir already has a KB — e.g. you adopted from inside Habeeto — skip the offer; it's already scanned.)
+
 ## Phase 4 — REPORT
 
-10. Summarize: notes migrated to global vs project, what was dropped and why, native auto-memory now disabled, the global routing directive installed, where the backup is, and the one-line restore instruction (copy back from `~/Engram/backups/<stamp>/tree/...`; re-enable native memory by restoring `settings.json` or setting `autoMemoryEnabled: true`).
+10. Summarize: notes migrated to global vs project, what was dropped and why, native auto-memory now disabled, the global routing directive installed, whether a project scan was run (and its note count), where the backup is, and the one-line restore instruction (copy back from `~/Engram/backups/<stamp>/tree/...`; re-enable native memory by restoring `settings.json` or setting `autoMemoryEnabled: true`).
 11. Remind the user a future `/engram:restore <stamp>` (planned) will reverse all of this, and that the backup is the safety net until then.
 
 Golden rule: if anything is unclear or the user is unsure, **stop after Phase 1**. A backup with no migration is a safe, valid outcome.
