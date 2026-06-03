@@ -26,6 +26,14 @@ The store has exactly two top-level buckets — **`global/`** and **`projects/`*
 `projects/<name>/` up to the right `global/<domain>/` folder and leave a thin
 link. One fact, one home — never duplicate.
 
+**A well-developed project folder has structure.** Ad-hoc facts can sit flat in
+`projects/<name>/`, but a *comprehensive* knowledge base (built by `/engram:scan`)
+organizes into sub-folders: `product/` (PM/overview/business/roadmap), `systems/`
+(each subsystem), `screens/` (each user-facing surface), `architecture/`
+(modules, data model, boundaries). When a repo has **no** `projects/<name>/` notes
+yet, OFFER to `/engram:scan` it (ask first) — that surveys the project and builds
+this KB in one pass.
+
 **It is ONE store — `~/Engram` — not per-repo brains.** Everything lives under
 two sibling buckets: `~/Engram/global/` (reusable knowledge, organized into
 domain folders) and `~/Engram/projects/` (one folder per project). That's why

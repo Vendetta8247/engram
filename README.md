@@ -27,7 +27,7 @@ Engram replaces Claude's ad-hoc memory with a knowledge graph stored as **plain 
 /engram:adopt
 ```
 
-That's it. A project's folder under `projects/` **auto-creates** the first time you store knowledge in that repo — you never run `init`. Changed your mind? `/engram:revert` puts native memory back exactly as it was.
+That's it. A project's folder under `projects/` **auto-creates** the first time you store knowledge in that repo — you never run `init`. And when you open a repo Engram has never seen, it **offers to `/engram:scan`** it into a full knowledge base (it asks first). Changed your mind? `/engram:revert` puts native memory back exactly as it was.
 
 Prefer to try it alongside native memory first? Run `/engram:setup` (install only, no takeover), then `/engram:adopt` when you're ready.
 
@@ -38,6 +38,7 @@ Prefer to try it alongside native memory first? Run `/engram:setup` (install onl
 | `/engram:adopt` | **The one command to go live.** Self-bootstraps (installs Basic Memory + builds the store if needed), then migrates off native memory — backs up everything first, shows the manifest, waits for confirmation, thins the native files, disables native auto-memory. |
 | `/engram:revert` | **The go-back button.** Restore native memory exactly as it was pre-adopt (re-enables native auto-memory, un-thins files, removes the routing directive). Graph preserved unless you ask. |
 | `/engram:setup` | *Optional.* Install + create the store *without* taking over native memory — for trying Engram alongside native memory first. (`adopt` does this for you.) |
+| `/engram:scan` | **Onboard a project — build a comprehensive KB in one pass.** Surveys the repo (product/PM overview, systems, screens, architecture, data model) via a documentation workflow and writes it into `projects/<name>/`. Offered automatically when a repo has no KB yet (it asks first); also run it to refresh after big changes. |
 | `/engram:init` | *Optional / automatic.* A project's folder (`~/Engram/projects/<name>/`) auto-creates the first time you store project knowledge — you rarely run this. Use it to set a project up deliberately ahead of time. |
 | `/engram:remember <fact>` | Capture a fact into the graph (auto-routes global vs project). |
 | `/engram:recall <query>` | Query + traverse the graph. |

@@ -15,3 +15,5 @@ Precondition: `~/Engram/INDEX.md` exists (Engram is set up). If not, run `/engra
 2. Create `~/Engram/projects/<name>/` (only if absent).
 3. Seed `~/Engram/projects/<name>/INDEX.md` — a one-line map-of-content: `- part_of [[INDEX]]` linking up to the global index, plus a title line.
 4. Tell the user: project-specific facts (config, IDs, this app's internals) now land in `~/Engram/projects/<name>/`, and should `- applies_to [[...]]` the reusable notes under `~/Engram/global/` rather than restating them. No repo files are created — it's all in the central store, so it's searchable alongside every other project.
+
+> `init` only creates an empty folder. To populate a comprehensive knowledge base up front (product/PM overview, systems, screens, architecture), use **`/engram:scan`** instead — it surveys the project and writes the whole KB in one pass.

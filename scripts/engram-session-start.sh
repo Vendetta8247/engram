@@ -20,10 +20,18 @@ fi
 
 # Route signal: everything lives in the ONE ~/Engram store, split into two
 # buckets — global/<domain>/ for reusable knowledge, projects/<name>/ per project.
+# Also: if this project has NO knowledge base yet, prompt the agent to OFFER a scan.
 if git rev-parse --show-toplevel >/dev/null 2>&1; then
   ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
   PROJ="$(basename "$ROOT" 2>/dev/null)"
   if [ -n "$PROJ" ]; then
-    echo "📁 Working in project '${PROJ}'. Route project-specific facts (config, this app's internals) to ~/Engram/projects/${PROJ}/ (auto-create that folder if needed). Reusable knowledge (patterns, working rules) goes to ~/Engram/global/<domain>/ (global/workflow/, global/kmp/, global/ios/, ...). One store → cross-project recall is a single search."
+    PDIR="${HOME}/Engram/projects/${PROJ}"
+    notes=0
+    [ -d "$PDIR" ] && notes=$(find "$PDIR" -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+    if [ "${notes:-0}" -eq 0 ]; then
+      echo "🆕 Project '${PROJ}' has NO Engram knowledge base yet. OFFER ONCE (do NOT run unprompted) to build one with /engram:scan — it surveys the project and captures a comprehensive KB (product/PM overview, systems, screens, architecture, technical details) into ~/Engram/projects/${PROJ}/. Ask the user first; if they decline, work normally and just capture durable facts ad hoc as you learn them."
+    else
+      echo "📁 Working in project '${PROJ}' (${notes} KB note(s) on file). Recall them before non-trivial work. Route new project-specific facts to ~/Engram/projects/${PROJ}/; reusable knowledge to ~/Engram/global/<domain>/ (global/workflow/, global/kmp/, global/ios/, ...). One store → cross-project recall is a single search."
+    fi
   fi
 fi
