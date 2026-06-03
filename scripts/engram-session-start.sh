@@ -23,7 +23,10 @@ fi
 # Also: if this project has NO knowledge base yet, prompt the agent to OFFER a scan.
 if git rev-parse --show-toplevel >/dev/null 2>&1; then
   ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
-  PROJ="$(basename "$ROOT" 2>/dev/null)"
+  # kebab-case the repo folder name so the path matches the skills' convention
+  # (lowercase + spaces/underscores → hyphens) — avoids a forked projects/ folder
+  # on case-sensitive filesystems and keeps permalinks consistent.
+  PROJ="$(basename "$ROOT" 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr ' _' '--')"
   if [ -n "$PROJ" ]; then
     PDIR="${HOME}/Engram/projects/${PROJ}"
     notes=0
