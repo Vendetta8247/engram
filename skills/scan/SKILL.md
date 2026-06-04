@@ -17,9 +17,10 @@ This is the standard **new-project onboarding** flow. **Never scan unprompted �
 2. Check existing coverage: list `~/Engram/projects/<name>/`.
    - **Has substantive notes** → this is a REFRESH. Confirm with the user what to (re)scan: whole project / one subsystem / only changed areas.
    - **Empty or absent** → first-time onboarding. **PROMPT the user** (AskUserQuestion) for TWO choices — do not proceed without a yes:
-     - **Depth:** *Overview* (a note per feature/module), *Feature + architecture map* (≈25 notes), or *Exhaustive* (per-system + per-screen + per-module + component/data, 50+ notes).
-     - **Engine:** *Single agent* (fast, cheap), *Multiple agents* (parallel, medium), or *Workflow* (the full Habeeto-style fan-out + completeness critic, most exhaustive) — see Phase 1. Recommend **Workflow** for an Exhaustive scan of a large established project; **Single/Multiple** for small projects or a quick pass.
+     - **Depth (= coverage breadth, NOT note size — every note stays compact):** *Overview* (a note per major feature/module), *Map* (≈25 notes — features + architecture), or *Exhaustive* (per-system + per-screen + per-module + data — broadest coverage). More depth means *more small linked nodes*, never longer notes.
+     - **Engine:** *Single agent* (fast, cheap), *Multiple agents* (parallel, medium), or *Workflow* (the full Habeeto-style fan-out + completeness critic, broadest coverage) — see Phase 1. Recommend **Workflow** for an Exhaustive scan of a large established project; **Single/Multiple** for small projects or a quick pass.
 3. Confirm Engram is set up (`~/Engram/INDEX.md` exists); if not, run `/engram:setup` inline first.
+4. **Seed from native memory (if present).** Locate this project's backed-up native memory: `~/Engram/backups/<latest>/tree/projects/<encoded>/memory/`, where `<encoded>` is the project's absolute path with `/`→`-` (e.g. `/Users/vendetta8247/Coding/Habito` → `-Users-vendetta8247-Coding-Habito`). If found, read it FIRST and pass it into the documentation engine as prior facts (the workflow's `auditFile` arg, or just hand it to the agents) — it holds decisions/gotchas the code alone won't reveal. **Verify every claim against current code** before committing it, and write the current truth, never "native memory said …". This is the lazy half of migration: adopt backed it up, scan folds it in. If no backup exists, skip.
 
 ## Phase 1 — Document (this is documentation, NOT a defect audit)
 
@@ -32,7 +33,7 @@ folder: projects/<name>/systems
 title: <title>
 tags: a, b
 ---BODY---
-<prose + "- [category] fact" observations + "- relation_type [[Other Note]]" relations>
+<COMPACT: a 1-2 line summary, then "- [category] fact" observations + "- relation_type [[Other Note]]" relations. No long prose, no restated code — many small linked notes, not essays.>
 ===END-NOTE===
 ```
 (Agents **return delimited markdown, NOT StructuredOutput** — a schema with a big "write a whole doc" field makes models emit prose instead of calling the tool and fail "without calling StructuredOutput." Delimited text is what they do naturally, lighter on tokens, immune to that failure. A small *inventory* schema is fine.)
@@ -55,11 +56,21 @@ Run a documentation **workflow** via the Workflow tool. Reference implementation
 
 ## Phase 2 — Curate into Engram
 1. **Parse** every text channel for `===ENGRAM-NOTE=== … ===END-NOTE===` blocks. **`html.unescape` first** (the workflow result is JSON-encoded, so `&` arrives as `&amp;`). Split each block into `folder` / `title` / `tags` header + body.
-2. **Dedupe & drop thin duplicates** — when two notes cover the same topic, keep the longer/more-detailed one. `search` the store for each title; if a real note exists, edit/supersede in place rather than forking.
+2. **Dedupe & merge** — when two notes cover the same topic, keep the clearer/more-accurate one and merge in any unique facts (don't just accumulate text — stay compact). `search` the store for each title; if a real note exists, edit/supersede in place rather than forking.
 3. **Route & write** each note to its folder (`projects/<name>/product` | `systems` | `screens` | `architecture`, or `global/<domain>/`). Create subfolders. Write frontmatter (`title`, `type: note`, `tags`) + body; sanitize the filename (`/`→`-`, `:`→`-`).
 4. **Reconcile cross-links.** Agents invent `[[Sibling Title]]` links that don't exactly match real titles. After writing, map each `[[link]]` to the nearest actual title (exact → normalized-exact → unique prefix match) and rewrite. **Gotcha:** `basic-memory reindex` *folds* long `title:` values across indented continuation lines in the frontmatter, so a naive `^title:` regex truncates them — parse the folded YAML scalar when collecting real titles. Leave genuinely non-existent targets dangling (harmless).
 5. Seed/refresh `~/Engram/projects/<name>/INDEX.md` (title e.g. "`<Project> Knowledge Base`" so `- part_of [[…]]` links resolve) as a map-of-content linking the product/systems/screens/architecture notes.
 Then `basic-memory reindex --project engram` and git-commit `~/Engram`.
 
+## Phase 2.5 — Consolidate & make agent-readable (orchestrator pass)
+
+After the notes are written, run ONE consolidation pass over the freshly-written `~/Engram/projects/<name>/` — a dedicated orchestrator/critic (inline for a small KB; a single `Agent` call or a Workflow stage for a large one). This is **not** the completeness critic (that hunts for *missing* coverage); this audits **what's actually on disk** for redundancy and form. The parallel doc agents can't see each other's output, so near-duplicates and drift are expected here — this pass cleans them up:
+
+1. **Dedup & merge.** List every note in the folder; find pairs/clusters that cover the same entity or overlap heavily (parallel agents commonly emit two notes for one system). Merge each cluster into one: keep the clearest, fold in unique facts, supersede in place, delete the losers. `search`/`build_context` to confirm before deleting. End state: no two notes answer the same question.
+2. **Readability FOR AGENTS, not humans.** Every note must read as operational memory for a future Claude session — compact, one concept, a 1-2 line summary + `- [category] fact` observations + `- relation [[…]]` links + concrete file paths. Rewrite any note that drifted into human-doc style: cut marketing prose, restated code, narrative padding, and "introduction/conclusion" framing. If a future agent can't act on a note in seconds, it failed — tighten it.
+3. **Fix cross-links** broken by the merges/renames, then refresh the project `INDEX.md` to match what now exists.
+
+Then `basic-memory reindex --project engram` and git-commit `~/Engram`.
+
 ## Phase 3 — Report
-Summarize notes written by folder, the project INDEX, and one sample note. List any `missing` items the critic flagged but couldn't fully draft (follow-ups). Remind the user: the KB is markdown in git — browsable/editable in Obsidian, refreshable by re-running `/engram:scan`.
+Summarize notes written by folder, how many the consolidation pass merged/tightened, the project INDEX, and one sample note. List any `missing` items the critic flagged but couldn't fully draft (follow-ups). Remind the user: the KB is markdown in git — browsable/editable in Obsidian, refreshable by re-running `/engram:scan`.

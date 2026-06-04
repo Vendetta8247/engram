@@ -50,6 +50,15 @@ away.
 Use `write_note` / `edit_note`. Before writing, `search` the graph — if the
 note exists, **edit it in place**; never fork a duplicate.
 
+**Keep notes compact — many small nodes beat a few big ones.** This graph is
+operational memory for *you* (the agent), not documentation for a human: write
+the least that lets a future session act correctly. One concept per note, a
+handful of observation lines, no prose paragraphs, no restating code. If you
+can't act on a line, don't write it. Compact notes also retrieve better — a
+tight note embeds to a sharper vector and surfaces *itself* rather than being
+buried inside an essay. When a topic grows, split it into linked notes instead
+of letting one balloon.
+
 A note = one entity (one concept per file). Use this grammar inside the body so
 the graph has real edges:
 
@@ -72,8 +81,13 @@ restating it.
 
 ## How to read
 
-Use `search` (semantic + full-text) and `build_context` to traverse a note plus
-its linked neighborhood. Prefer following typed relations over re-deriving facts.
+**Search the current project first.** The store is one flat index, so an
+unscoped query blends every project's notes together. Lead with what's local:
+filter the hits to those under `projects/<current>/` and `global/` (by permalink
+prefix) and answer from those first; only widen to a full cross-store search when
+the local pass comes up short or the question is explicitly cross-project. Then
+use `build_context` to traverse a note plus its linked neighborhood — follow
+typed relations over re-deriving facts.
 
 ## Engram OWNS the "remember" verb — never native memory
 
@@ -97,7 +111,8 @@ manual overrides; the default is that you do this proactively:
 - **Auto-recall** — at session start and before any non-trivial work on a
   project, `search`/`build_context` the store for this project's notes
   (`projects/<name>/`) + their linked global knowledge *without being asked*.
-  Lead with what's already known.
+  Lead with what's already known. Widen to other projects' notes only if the
+  local pass misses or the task is explicitly cross-project.
 - **Auto-capture** — the moment you learn something durable, write it to the
   graph immediately, mid-task, without being asked: a user preference, a
   correction, a gotcha, a decision-and-its-why, a reusable pattern, a runbook.
@@ -109,6 +124,12 @@ a future task), and **not trivially derivable** from code/config at the moment
 you'd need it. Skip one-off trivia, restated-from-code values, and
 conversation-local detail. When in doubt, a terse note beats none — but a
 pointer beats a duplicated value.
+
+**Write the truth, not its history.** Record the fact as it stands now — never
+meta-commentary about what some earlier source (native memory, a prior note, a
+wrong assumption) *used* to say. "Native memory claimed X but it's actually Y"
+is noise — just write "Y". The graph holds current reality, not a changelog of
+corrections.
 
 - When a stored fact changes: supersede in place — overwrite the old value and
   delete it. Recency wins; never leave two copies.

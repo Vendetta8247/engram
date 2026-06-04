@@ -23,6 +23,7 @@ Everything lives under `~/Engram`, split into exactly two top-level buckets: **`
   `~/Engram/global/{workflow,kmp,ios,android,tooling}`, `~/Engram/projects`, and `~/Engram/inbox`.
   (Note: project config like Firebase IDs/buckets is per-project → it lives under `projects/<name>/`, not a `global/firebase/` domain.)
 - `git init` `~/Engram` if it isn't already a repo; add a `.gitignore` for `.obsidian/` and OS cruft; initial commit.
+- **Keep `backups/` and `inbox/` out of the search index.** Append `backups/` and `inbox/` to `~/.basic-memory/.bmignore` (create it if absent) — idempotently, only if the lines aren't already there. Backups are point-in-time native-memory snapshots that would otherwise outrank real notes in recall; the inbox is raw capture that `/engram:triage` reads from disk, not via search. (basic-memory honors `.bmignore` for file sync / indexing.)
 - Seed `~/Engram/INDEX.md` — a short map-of-content listing the `global/` domains + a `projects/` section. (This file is also the "Engram is set up" sentinel the hooks check.)
 
 ## 4. Register the single Basic Memory project

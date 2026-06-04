@@ -10,6 +10,6 @@ allowed-tools: Read
 
 Query: **$ARGUMENTS**
 
-1. Use the basic-memory MCP `search` (semantic + full-text) across the whole `~/Engram` store — both buckets, `global/` AND every `projects/<name>/` — since a fact from any project is one search away.
+1. **Current project first.** Determine the current project (`projects/<name>/`, from the git repo folder). Run the basic-memory MCP `search` (semantic + full-text), then lead with the hits whose permalink sits under `projects/<name>/` or `global/` — answer from those if they cover it. Only widen to the rest of the store (other `projects/*`) when the local pass comes up short or the question is explicitly cross-project. A fact from any project is still one search away — it's just ranked after home.
 2. For the most relevant hits, `build_context` to pull the note plus its linked neighborhood — follow typed relations rather than re-deriving facts.
 3. Synthesize a concise answer, citing the note titles you drew from. If nothing relevant exists, say so plainly (don't invent) and offer to `/engram:remember` it once known.
