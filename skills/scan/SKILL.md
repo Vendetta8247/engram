@@ -18,9 +18,9 @@ This is the standard **new-project onboarding** flow. **Never scan unprompted �
    - **Has substantive notes** → this is a REFRESH. Confirm with the user what to (re)scan: whole project / one subsystem / only changed areas.
    - **Empty or absent** → first-time onboarding. **PROMPT the user** (AskUserQuestion) for TWO choices — do not proceed without a yes:
      - **Depth (= coverage breadth, NOT note size — every note stays compact):** *Overview* (a note per major feature/module), *Map* (≈25 notes — features + architecture), or *Exhaustive* (per-system + per-screen + per-module + data — broadest coverage). More depth means *more small linked nodes*, never longer notes.
-     - **Engine:** *Single agent* (fast, cheap), *Multiple agents* (parallel, medium), or *Workflow* (the full Habeeto-style fan-out + completeness critic, broadest coverage) — see Phase 1. Recommend **Workflow** for an Exhaustive scan of a large established project; **Single/Multiple** for small projects or a quick pass.
+     - **Engine:** *Single agent* (fast, cheap), *Multiple agents* (parallel, medium), or *Workflow* (the full fan-out + completeness critic, broadest coverage) — see Phase 1. Recommend **Workflow** for an Exhaustive scan of a large established project; **Single/Multiple** for small projects or a quick pass.
 3. Confirm Engram is set up (`~/Engram/INDEX.md` exists); if not, run `/engram:setup` inline first.
-4. **Seed from native memory (if present).** Locate this project's backed-up native memory: `~/Engram/backups/<latest>/tree/projects/<encoded>/memory/`, where `<encoded>` is the project's absolute path with `/`→`-` (e.g. `/Users/vendetta8247/Coding/Habito` → `-Users-vendetta8247-Coding-Habito`). If found, read it FIRST and pass it into the documentation engine as prior facts (the workflow's `auditFile` arg, or just hand it to the agents) — it holds decisions/gotchas the code alone won't reveal. **Verify every claim against current code** before committing it, and write the current truth, never "native memory said …". This is the lazy half of migration: adopt backed it up, scan folds it in. If no backup exists, skip.
+4. **Seed from native memory (if present).** Locate this project's backed-up native memory: `~/Engram/backups/<latest>/tree/projects/<encoded>/memory/`, where `<encoded>` is the project's absolute path with `/`→`-` (e.g. `/Users/you/Code/my-app` → `-Users-you-Code-my-app`). If found, read it FIRST and pass it into the documentation engine as prior facts (the workflow's `auditFile` arg, or just hand it to the agents) — it holds decisions/gotchas the code alone won't reveal. **Verify every claim against current code** before committing it, and write the current truth, never "native memory said …". This is the lazy half of migration: adopt backed it up, scan folds it in. If no backup exists, skip.
 
 ## Phase 1 — Document (this is documentation, NOT a defect audit)
 
@@ -44,7 +44,7 @@ One subagent surveys the project and documents it in a single pass, returning al
 ### Engine B — Multiple agents (parallel, medium — no Workflow tool)
 Do a quick **inline survey** (or one survey Agent) to get the work-list, then spawn a **bounded set of parallel `Agent` calls** (≈3–8), one per area/cluster — e.g. *PM/product profile*, *systems*, *screens*, *architecture* (split further for bigger projects). Each returns delimited notes; reconcile + curate in Phase 2. Parallel and thorough without the full fan-out or the Workflow opt-in.
 
-### Engine C — Workflow (the Habeeto-style full fan-out — most exhaustive)
+### Engine C — Workflow (the full fan-out — broadest coverage)
 Run a documentation **workflow** via the Workflow tool. Reference implementation: `${CLAUDE_PLUGIN_ROOT}/scripts/example-project-kb-workflow.js` (run it with `args: {projectRoot, projectName, depth, auditFile?}`). Shape:
 - **Survey** (parallel barrier): a **PM/product profile** agent + an **inventory** agent (systems / screens / modules / dataModel, each with key files — the work-list).
 - **Document** (fan-out, ONE agent per system/screen/module) → delimited notes.

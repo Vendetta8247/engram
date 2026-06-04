@@ -54,7 +54,7 @@ Prefer to try it alongside native memory first? Run `/engram:setup` (install onl
    global/                 ← reusable knowledge, in domain folders
      workflow/ kmp/ ios/ android/ tooling/ ...
    projects/
-     habito/  vizix/  ...   ← each project's own facts (config, internals)
+     my-app/  api/  ...    ← each project's own facts (config, internals)
    inbox/                  ← capture inbox (sync to phone via Obsidian/iCloud/git)
 ```
 Two top-level buckets: **`global/`** (reusable across projects) and **`projects/`** (per project). Everything lives in `~/Engram`, so a fact from any project is one search away. No per-repo files.

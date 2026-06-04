@@ -48,7 +48,7 @@ Global memory is now in the graph. Per-project knowledge is built by **scanning 
 
 - **This project only** (recommended) — scan the current repo now.
 - **None** — skip; each project fills in the first time you `/engram:scan` it. The SessionStart hook auto-offers a scan whenever you open a project with no KB, so nothing is lost.
-- **All projects** — heavy, expensive opt-in. Iterate every backed-up project: decode its path from the backup dir name (e.g. `-Users-vendetta8247-Coding-Habito` → `/Users/vendetta8247/Coding/Habito`) and scan each. **Warn about the cost** (one full scan per project) before starting.
+- **All projects** — heavy, expensive opt-in. Iterate every backed-up project: decode its path from the backup dir name (e.g. `-Users-you-Code-my-app` → `/Users/you/Code/my-app`) and scan each. **Warn about the cost** (one full scan per project) before starting.
 
 If they choose a scan (this / all), ALSO ask **depth** (Overview / Map / Exhaustive) and **engine** (Single agent / Multiple agents / Workflow), then run the **`/engram:scan` flow** with those choices for each project in scope. `/engram:scan` seeds from the project's native-memory backup first, then reads the code. Recommend **Workflow** for large projects; **Single/Multiple** for small ones. (Notes stay compact regardless of depth — depth controls coverage, not note size.)
 
