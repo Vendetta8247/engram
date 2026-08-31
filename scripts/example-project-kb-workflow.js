@@ -35,7 +35,7 @@ const AUDIT = args && args.auditFile ? String(args.auditFile) : null
 const CHUNK = 6 // keep concurrency gentle so a server-side rate limit doesn't sink the run
 const CAP = DEPTH === 'overview' ? { sys: 8, scr: 8, mod: 6 } : DEPTH === 'map' ? { sys: 12, scr: 12, mod: 6 } : { sys: 16, scr: 20, mod: 8 }
 
-const CONTEXT = `You are DOCUMENTING the project at ${ROOT} to build a knowledge base that is COMPREHENSIVE in COVERAGE but COMPACT per note — NOT a bug audit. Capture what someone needs to work on it: what it is, how it works, where things live, why decisions were made. Favor many small linked notes over a few long ones.
+const CONTEXT = `You are DOCUMENTING the project at ${ROOT} to build its OPERATIONAL ENCYCLOPEDIA — NOT a bug audit. Capture what someone needs to work on it without reconstructing old chats: what it is, how it works, where authoritative behavior lives, how components fit, and why decisions were made. Keep one concept per note, but never trade technical specificity or completeness for brevity.
 FIRST understand the project type (README, manifests, build files, top-level dirs) and ADAPT vocabulary to it (web → pages/routes/services; backend → endpoints/jobs/schemas; library → modules/APIs; CLI → commands; mobile → screens/systems). Read the ACTUAL code.${AUDIT ? `\nA prior audit/notes file is at ${AUDIT} — mine it for entry points + facts, but verify against current code.` : ''}`
 
 const NOTE_FORMAT = `OUTPUT FORMAT — return your note(s) as PLAIN TEXT, each wrapped EXACTLY like this (no code fences, output nothing else):
@@ -48,7 +48,7 @@ tags: tag1, tag2
 <note body for someone who has never seen the project: readable PROSE plus basic-memory structured lines — observations "- [category] fact" (categories: product, business, fact, arch, flow, file, data, gotcha, decision, status, convention) and relations "- relation_type [[Other Note Title]]" (uses | part_of | relates_to | implements | depends_on | supersedes). Cite concrete file paths; cross-link to sibling notes.>
 ===END-NOTE===
 
-One block per note. "folder" MUST be one of: projects/${NAME}/product, projects/${NAME}/systems, projects/${NAME}/screens, projects/${NAME}/architecture, or global/<domain> (a reusable engineering pattern). Keep [[link]] targets close to the real sibling titles. Keep each note COMPACT — a 1-2 line summary plus structured observation/relation lines; no long prose, no restated code. Prefer SPLITTING a big topic into several small linked notes over one long note (the graph rewards many small nodes).`
+One block per note. "folder" MUST be one of: projects/${NAME}/product, projects/${NAME}/systems, projects/${NAME}/screens, projects/${NAME}/architecture, projects/${NAME}/runbooks, or global/<domain> (a reusable engineering pattern). Keep [[link]] targets close to the real sibling titles. Include exact paths/symbols, boundaries/contracts, schemas and data flow, commands, constraints, edge cases, failure modes, decisions+why, and sources or verification dates where relevant. Do not copy routine code. Split genuinely distinct concepts into linked notes, but do not omit detail just to stay short.`
 
 async function withRetry(fn, tries) {
   let last
@@ -94,7 +94,7 @@ const kindGuide = {
   screen: `Document the SURFACE/SCREEN/FLOW: purpose, what the user sees and can do, structure/sub-units, the data/state it binds, navigation in/out, files (per platform if relevant) with paths, any divergence. Folder: projects/${NAME}/screens.`,
   module: `Document the MODULE: responsibility, directory layout, key components, the boundaries/interfaces it exposes or consumes. Folder: projects/${NAME}/architecture.`,
 }
-const docPrompt = (it) => `${CONTEXT}\n\nTASK: Write COMPACT documentation note(s) for this ${it.kind}: "${it.name}".\nOne-liner: ${it.oneLiner || '(derive it)'}\nStart from these key files (verify + read, then expand): ${(it.keyFiles || it.keyDirs || []).join(', ') || '(discover them)'}\n\n${kindGuide[it.kind]}\nData model: ${dataModelBlob}\nEmit 1-3 compact notes (split rather than pad). ${NOTE_FORMAT}`
+const docPrompt = (it) => `${CONTEXT}\n\nTASK: Write precise documentation note(s) for this ${it.kind}: "${it.name}".\nOne-liner: ${it.oneLiner || '(derive it)'}\nStart from these key files (verify + read, then expand): ${(it.keyFiles || it.keyDirs || []).join(', ') || '(discover them)'}\n\n${kindGuide[it.kind]}\nData model: ${dataModelBlob}\nEmit the smallest set of concept-scoped notes that preserves all actionable detail. ${NOTE_FORMAT}`
 
 // ---------- Phase 2: DOCUMENT (sequential chunks, retry failures) ----------
 phase('Document')
@@ -120,7 +120,7 @@ log(`documented ${docTexts.length} agent outputs; ${failed.length} still failed`
 // ---------- Phase 3: REVIEW (completeness critic) ----------
 phase('Review')
 const criticText = await withRetry(() => agent(
-  `${CONTEXT}\n\nYou are the COMPLETENESS CRITIC — make this KB EXHAUSTIVE. Intended coverage: systems=${JSON.stringify(systems.map((s) => s.name))} screens=${JSON.stringify(screens.map((s) => s.name))} modules=${JSON.stringify(modules.map((s) => s.name))} dataModel=${dataModelBlob}.\nThese topics may have failed and need writing: ${JSON.stringify(failed.map((f) => f.name))}.\nRead the repo${AUDIT ? ' + audit data' : ''}. Find what's MISSING (an uncovered system/surface/integration/data area/PM aspect/convention/runbook). DRAFT the missing notes now, COMPACT. Be exhaustive in COVERAGE, not in length — many small linked notes.\n\n${NOTE_FORMAT}`,
+  `${CONTEXT}\n\nYou are the COMPLETENESS CRITIC — make this KB operationally complete. Intended coverage: systems=${JSON.stringify(systems.map((s) => s.name))} screens=${JSON.stringify(screens.map((s) => s.name))} modules=${JSON.stringify(modules.map((s) => s.name))} dataModel=${dataModelBlob}.\nThese topics may have failed and need writing: ${JSON.stringify(failed.map((f) => f.name))}.\nRead the repo${AUDIT ? ' + audit data' : ''}. Find what's MISSING or too vague (an uncovered system/surface/integration/data area/PM aspect/convention/runbook, or a note lacking exact technical detail). Draft or correct those notes now.\n\n${NOTE_FORMAT}`,
   { phase: 'Review', label: 'completeness-critic' }
 ), 3) || ''
 

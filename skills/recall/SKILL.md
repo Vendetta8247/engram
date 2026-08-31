@@ -1,8 +1,6 @@
 ---
 name: recall
 description: Use when the user asks what's known / remembered / decided about something, or to look it up in memory. Queries + traverses the Engram knowledge graph (basic-memory MCP) across project + global tiers — not Claude's native memory. (The agent also auto-recalls before non-trivial work per the using-the-graph skill.)
-when_to_use: Trigger phrases like "what do you know about", "do you remember", "did we decide", "have we hit this before", "look it up", "recall", "what's our convention for".
-argument-hint: "<what to recall>"
 allowed-tools: Read
 ---
 

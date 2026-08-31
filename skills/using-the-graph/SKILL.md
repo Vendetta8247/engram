@@ -1,15 +1,16 @@
 ---
 name: using-the-graph
 description: How the Engram knowledge graph works and how to maintain it AUTOMATICALLY. Memory is ambient — proactively recall relevant knowledge before work and capture durable learnings as you go, without being asked. Read this at session start and whenever storing/recalling. Engram (the basic-memory MCP) is the durable memory; never write learnings into CLAUDE.md or MEMORY.md.
-user-invocable: false
 ---
 
 # Using the Engram knowledge graph
 
-Engram is the durable memory. It is a graph of markdown notes, served by the
-**basic-memory** MCP. When you learn something worth keeping, or need prior
-knowledge, you go here — **not** to `CLAUDE.md` / `MEMORY.md` (those are now
-thin pointers to this graph).
+Engram is the durable memory and each project's **operational encyclopedia**.
+It is a graph of markdown notes, served by the **basic-memory** MCP. A developed
+project tier should contain the key product, architecture, subsystem, data,
+integration, runbook, convention, decision, and gotcha knowledge needed to work
+effectively without reconstructing the project from old chats. Use it instead
+of `CLAUDE.md` / `MEMORY.md` (those are thin pointers to this graph).
 
 ## Two buckets — decide where a fact lives
 
@@ -19,8 +20,9 @@ The store has exactly two top-level buckets — **`global/`** and **`projects/`*
 |---|---|
 | Reusable across projects (a KMP pattern, how the user works, a general gotcha) | a domain folder under **`~/Engram/global/`** — `global/workflow/`, `global/kmp/`, `global/ios/`, `global/android/`, `global/tooling/`, … |
 | Specific to ONE project/app (its config, IDs, this app's internals — e.g. a Firebase bucket name) | **`~/Engram/projects/<name>/`** |
-| Derivable cheaply from code/config at point of need | **nowhere** — keep a pointer, re-derive |
+| Routine implementation detail already obvious in code/config | **nowhere** — do not mirror code; store the authoritative pointer when it is needed for orientation |
 | Raw thought to sort later | the **inbox** (`~/Engram/inbox/`), via `/engram:triage` later |
+| Research or a hypothesis still being tested | temporary `projects/<name>/research/` (or `global/research/` only if truly cross-project); promote or discard when resolved |
 
 **Promotion rule:** if a project fact turns out reusable, move it from
 `projects/<name>/` up to the right `global/<domain>/` folder and leave a thin
@@ -30,7 +32,8 @@ link. One fact, one home — never duplicate.
 `projects/<name>/`, but a *comprehensive* knowledge base (built by `/engram:scan`)
 organizes into sub-folders: `product/` (PM/overview/business/roadmap), `systems/`
 (each subsystem), `screens/` (each user-facing surface), `architecture/`
-(modules, data model, boundaries). When a repo has **no** `projects/<name>/` notes
+(modules, data model, boundaries), `runbooks/` (repeatable operations), and
+temporary `research/`. When a repo has **no** `projects/<name>/` notes
 yet, OFFER to `/engram:scan` it (ask first) — that surveys the project and builds
 this KB in one pass.
 
@@ -50,14 +53,15 @@ away.
 Use `write_note` / `edit_note`. Before writing, `search` the graph — if the
 note exists, **edit it in place**; never fork a duplicate.
 
-**Keep notes compact — many small nodes beat a few big ones.** This graph is
-operational memory for *you* (the agent), not documentation for a human: write
-the least that lets a future session act correctly. One concept per note, a
-handful of observation lines, no prose paragraphs, no restating code. If you
-can't act on a line, don't write it. Compact notes also retrieve better — a
-tight note embeds to a sharper vector and surfaces *itself* rather than being
-buried inside an essay. When a topic grows, split it into linked notes instead
-of letting one balloon.
+**Be precise and complete for the concept — structured, not artificially
+short.** One concept per note still retrieves better than an omnibus document,
+but compactness must never create vague or incomplete knowledge. A technical
+note includes the exact details a future agent needs to act correctly: paths and
+symbols, boundaries and contracts, schemas/data flow, commands, constraints,
+edge cases, failure modes, decisions and why, plus sources or verification dates
+where relevant. Do not copy routine source code; record authoritative pointers
+and explain how the pieces fit. Split genuinely distinct concerns into linked
+notes, but keep all necessary detail for the concept in its canonical note.
 
 A note = one entity (one concept per file). Use this grammar inside the body so
 the graph has real edges:
@@ -82,12 +86,26 @@ restating it.
 ## How to read
 
 **Search the current project first.** The store is one flat index, so an
-unscoped query blends every project's notes together. Lead with what's local:
-filter the hits to those under `projects/<current>/` and `global/` (by permalink
-prefix) and answer from those first; only widen to a full cross-store search when
-the local pass comes up short or the question is explicitly cross-project. Then
-use `build_context` to traverse a note plus its linked neighborhood — follow
-typed relations over re-deriving facts.
+unscoped query blends every project's notes together. Start with compact
+`search`, select and `fetch`/`read` the 1–3 best routing notes under
+`projects/<current>/` and linked `global/`, then expand with targeted reads as
+the task requires. Do not dump the whole encyclopedia into context. Only widen
+to other projects when the local pass misses or the question is explicitly
+cross-project. Follow typed relations instead of re-deriving known structure.
+
+## Encyclopedia, live checkpoint, and research are different layers
+
+- **Permanent encyclopedia:** canonical topic notes that explain the project
+  precisely enough to work on it. Update these in place as verified reality
+  changes.
+- **Live checkpoint:** one small mutable handoff for a long active procedure:
+  objective, current status, decisions and why, exact refs/commits, verification,
+  blockers/safety, and next action. It is not a substitute for topic notes.
+- **Temporary research:** evidence and hypotheses still being evaluated. Follow
+  [the research lifecycle](references/research-lifecycle.md). When research is
+  validated, migrate the stable conclusions into permanent canonical notes and
+  remove or reduce the temporary note. Do not let successful research rot in a
+  scratch folder.
 
 ## Engram OWNS the "remember" verb — never native memory
 
@@ -113,17 +131,20 @@ manual overrides; the default is that you do this proactively:
   (`projects/<name>/`) + their linked global knowledge *without being asked*.
   Lead with what's already known. Widen to other projects' notes only if the
   local pass misses or the task is explicitly cross-project.
-- **Auto-capture** — the moment you learn something durable, write it to the
-  graph immediately, mid-task, without being asked: a user preference, a
-  correction, a gotcha, a decision-and-its-why, a reusable pattern, a runbook.
+- **Auto-capture** — the moment you learn something durable or verify key
+  project knowledge, write it to the graph immediately, mid-task, without being
+  asked: product behavior, architecture, subsystem contracts, data flow,
+  integrations, runbooks, conventions, user preferences, corrections, gotchas,
+  decisions-and-why, and reusable patterns.
   Don't batch it to "later" and don't wait for a command.
 
-**The worth-keeping bar** (so auto-capture stays curated, not noisy) — write it
-only if it is **durable** (still true next week), **reusable** (you'd want it on
-a future task), and **not trivially derivable** from code/config at the moment
-you'd need it. Skip one-off trivia, restated-from-code values, and
-conversation-local detail. When in doubt, a terse note beats none — but a
-pointer beats a duplicated value.
+**The worth-keeping bar** (so the encyclopedia stays useful, not noisy) — store
+knowledge a future task needs to orient, decide, operate, or avoid a known
+failure. It must be verified or clearly marked as temporary research. Skip
+conversation-local trivia and routine code restatement, but retain exact
+authoritative pointers and non-obvious relationships even when the code is the
+ultimate source of truth. Prefer a precise pointer over duplicated code and a
+specific complete note over a vague terse one.
 
 **Write the truth, not its history.** Record the fact as it stands now — never
 meta-commentary about what some earlier source (native memory, a prior note, a

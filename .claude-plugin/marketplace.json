@@ -3,13 +3,13 @@
   "owner": {
     "name": "Yegor Yeriomin"
   },
-  "description": "Engram — durable graph-shaped memory for Claude Code.",
+  "description": "Engram — durable project knowledge over one supervised local MCP service.",
   "plugins": [
     {
       "name": "engram",
       "source": "./",
-      "description": "Durable, graph-shaped, two-tier memory for Claude Code (markdown + git + Obsidian over MCP).",
-      "version": "0.3.0"
+      "description": "Durable project knowledge and bounded checkpoints shared by Codex and Claude Code.",
+      "version": "0.4.4"
     }
   ]
 }

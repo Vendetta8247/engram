@@ -1,8 +1,6 @@
 ---
 name: revert
 description: Undo /engram:adopt — restore Claude's native memory exactly as it was before adoption and step Engram aside. The "deinit" / go-back switch. Re-enables native auto-memory, un-thins the native files, removes the routing directive. The Engram graph is preserved (not deleted) unless you ask.
-when_to_use: When the user wants to go back, undo Engram, disable it, restore native memory, deinit, or "remove Engram".
-argument-hint: "[backup-timestamp]"
 allowed-tools: Bash Read AskUserQuestion
 ---
 

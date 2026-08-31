@@ -1,0 +1,38 @@
+{
+  "name": "engram",
+  "version": "0.4.4",
+  "description": "Durable, graph-shaped memory and bounded session checkpoints for Codex and Claude Code.",
+  "author": {
+    "name": "Yegor Yeriomin"
+  },
+  "homepage": "https://github.com/vendetta8247/engram",
+  "repository": "https://github.com/vendetta8247/engram",
+  "license": "MIT",
+  "keywords": [
+    "memory",
+    "knowledge-graph",
+    "codex",
+    "claude-code",
+    "basic-memory",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Engram",
+    "shortDescription": "Durable memory with bounded Codex checkpoints",
+    "longDescription": "Keeps durable decisions and live procedure checkpoints in a shared Markdown knowledge graph while guarding Codex against runaway local session history.",
+    "developerName": "Yegor Yeriomin",
+    "category": "Productivity",
+    "capabilities": [
+      "Memory",
+      "Lifecycle hooks",
+      "MCP"
+    ],
+    "websiteURL": "https://github.com/vendetta8247/engram",
+    "defaultPrompt": [
+      "Recall the relevant Engram notes before we continue.",
+      "Checkpoint this procedure in Engram.",
+      "What durable knowledge should Engram retain?"
+    ]
+  }
+}

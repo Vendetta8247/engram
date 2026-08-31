@@ -1,7 +1,6 @@
 ---
 name: triage
 description: Process the Engram capture inbox — file each raw thought into the curated graph, park it, or drop it. The capture→curation step.
-argument-hint: ""
 allowed-tools: Bash Read AskUserQuestion
 ---
 

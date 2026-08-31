@@ -1,8 +1,8 @@
 {
   "name": "engram",
   "displayName": "Engram",
-  "version": "0.3.0",
-  "description": "Durable, graph-shaped, two-tier memory for Claude Code — plain markdown + git + Obsidian, queried over MCP. Replaces Claude's ad-hoc memory with a portable second brain shared across every project.",
+  "version": "0.4.4",
+  "description": "Durable project knowledge and bounded checkpoints over one supervised local MCP service shared with Codex.",
   "author": {
     "name": "Yegor Yeriomin"
   },

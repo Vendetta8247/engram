@@ -3,13 +3,31 @@
 # unprocessed capture inbox. Stays silent if Engram isn't set up yet.
 set -uo pipefail
 
+ROOT="${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}}"
+if [ "${ENGRAM_HOST:-}" = "codex" ] || [ -n "${PLUGIN_ROOT:-}" ]; then
+  exec bash "${ROOT}/scripts/engram-codex-hook.sh"
+fi
+
+INPUT="$(cat)"
+SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null)"
+HEALTH_JSON="$(bash "${ROOT}/scripts/engram-mcp-health.sh" --hook SessionStart "$SESSION_ID" claude 2>/dev/null)"
+HEALTHY="$(printf '%s' "$HEALTH_JSON" | jq -r '.healthy // false' 2>/dev/null)"
+HEALTH_NOTIFY="$(printf '%s' "$HEALTH_JSON" | jq -r 'if has("notify") then .notify else true end' 2>/dev/null)"
+HEALTH_MESSAGE="$(printf '%s' "$HEALTH_JSON" | jq -r '.message // empty' 2>/dev/null)"
+
+if [ "$HEALTHY" != "true" ]; then
+  [ -n "$HEALTH_MESSAGE" ] && echo "⚠️ $HEALTH_MESSAGE"
+elif [ "$HEALTH_NOTIFY" = "true" ] && [ -n "$HEALTH_MESSAGE" ]; then
+  echo "$HEALTH_MESSAGE"
+fi
+
 GLOBAL="${HOME}/Engram"
 INBOX="${HOME}/Engram/inbox"
 
 # Not set up yet → say nothing.
 [ -f "${HOME}/Engram/INDEX.md" ] || exit 0
 
-echo "🧠 Engram memory is active. Maintain it AUTOMATICALLY — the user should not have to ask. (1) AUTO-RECALL: before non-trivial work, search the store via the basic-memory MCP — THIS project first (projects/<name>/ + linked global/), widening to other projects only if the local pass misses — and lead with what's already known. (2) AUTO-CAPTURE: the moment you learn something durable/reusable (a preference, correction, gotcha, decision+why, reusable pattern), write it to the graph immediately, mid-task, without being asked — keep notes COMPACT (many small nodes). Apply the worth-keeping bar so it stays curated. Durable memory is the graph, never CLAUDE.md/MEMORY.md. See the 'using-the-graph' skill for tiering + conventions."
+echo "🧠 Engram memory is active. Treat this project's tier as its operational encyclopedia and maintain it AUTOMATICALLY. Before non-trivial work, search this project first and read only the best routing notes before expanding as needed. Capture verified product and technical knowledge, decisions, runbooks, gotchas, and authoritative code pointers immediately. Notes are concept-scoped but must be precise, not vague: include paths/symbols, contracts, data flow, commands, constraints, edge cases, and sources where relevant. Keep a live procedure checkpoint separate from permanent topic notes. Stage unverified research under research/, then promote validated conclusions or discard it. Durable memory is the graph, never CLAUDE.md/MEMORY.md. See the 'using-the-graph' skill for the full contract."
 
 if [ -d "$INBOX" ]; then
   n=$(find "$INBOX" -type f \( -name '*.md' -o -name '*.txt' \) 2>/dev/null | wc -l | tr -d ' ')

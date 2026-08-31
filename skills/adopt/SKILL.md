@@ -1,7 +1,6 @@
 ---
 name: adopt
 description: Migrate off Claude's native memory into the Engram graph. Backs up EVERYTHING first, shows the manifest, and requires explicit confirmation before migrating or replacing anything. Then offers to build a full project-manager-style KB for the current codebase (single agent / multiple agents / workflow). Reversible.
-argument-hint: ""
 allowed-tools: Bash Read Edit Write Glob Grep AskUserQuestion Agent Workflow
 ---
 
@@ -17,7 +16,7 @@ If `~/Engram/INDEX.md` does not exist yet (Engram not set up), run the `/engram:
 
 ## Phase 1 — BACK UP EVERYTHING (always, first, no exceptions)
 
-1. Run the backup script: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/engram-backup.sh"`. It is **read-only** on the source — it copies `~/.claude/CLAUDE.md`, every `~/.claude/projects/*/memory/`, and any `MEMORY.md` into a timestamped `~/Engram/backups/<stamp>/` (tree + tarball + manifest).
+1. Run the backup script: `bash "${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/scripts/engram-backup.sh"`. It is **read-only** on the source — it copies `~/.claude/CLAUDE.md`, every `~/.claude/projects/*/memory/`, and any `MEMORY.md` into a timestamped `~/Engram/backups/<stamp>/` (tree + tarball + manifest).
 2. Print the backup location and the manifest contents so the user sees exactly what was captured and where.
 
 ## Phase 2 — CONFIRM (hard stop)

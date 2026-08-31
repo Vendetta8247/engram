@@ -1,7 +1,6 @@
 ---
 name: init
-description: OPTIONAL — pre-create the current project's folder in the Engram store. Normally automatic — the agent creates ~/Engram/projects/<name>/ the first time it stores project knowledge, so you rarely run this. Use it to set a project up deliberately (e.g. seed its index) ahead of time.
-argument-hint: "[project-name]"
+description: OPTIONAL — pre-create the current project's folder in the Engram store. Normally automatic — the agent creates the named directory under ~/Engram/projects/ the first time it stores project knowledge, so you rarely run this. Use it to set a project up deliberately (e.g. seed its index) ahead of time.
 allowed-tools: Bash Read Write
 ---
 

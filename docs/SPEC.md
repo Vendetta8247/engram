@@ -4,9 +4,9 @@
 
 ## 1. What it is
 
-**Engram is a Claude Code plugin that replaces Claude's ad-hoc memory with a durable, graph-shaped, two-tier knowledge base — stored as plain markdown, browsable in Obsidian, versioned in git, and queried by agents over MCP.**
+**Engram is a Codex- and Claude-compatible memory layer that replaces ad-hoc chat memory with a durable, graph-shaped, two-tier knowledge base — stored as plain markdown, browsable in Obsidian, versioned in git, and queried by agents over MCP.**
 
-One-liner: *Your second brain for Claude — portable, graph-shaped, and shared across every project you build.*
+One-liner: *Durable project knowledge shared by Codex and Claude — portable, graph-shaped, and precise enough to operate from.*
 
 It is installable by anyone via `/` commands, migrates existing Claude memory in (backing everything up first), and gives you and your agents one knowledge graph that spans projects.
 
@@ -18,18 +18,35 @@ It is installable by anyone via `/` commands, migrates existing Claude memory in
 4. **Memory is automatic, not on-demand.** The user never has to ask the agent to remember or recall. The agent **auto-recalls** relevant knowledge before non-trivial work and **auto-captures** durable learnings as it goes (governed by a worth-keeping bar so it stays curated) — driven by the always-on `using-the-graph` rule, a SessionStart hook, and a PreCompact checkpoint that persists learnings before the context is compacted away. `/engram:remember` and `/engram:recall` are *manual overrides*, not the primary path.
 5. **Safe by default.** Nothing destructive happens without an explicit, backed-up, confirmable step. Replacing native memory always snapshots everything first.
 6. **Shareable.** Ships as a Claude Code plugin via a marketplace repo. A friend runs two commands and has the same system.
+7. **Project encyclopedia, not a fact scrapbook.** A mature project tier contains the key product and technical knowledge needed to work on the project. Concept-scoped notes remain precise and complete; compactness never justifies vagueness.
+8. **Research has a lifecycle.** Unverified work is temporary and explicitly marked. Validated conclusions are promoted into canonical permanent notes; rejected or stale scratch material is distilled or removed.
 
 ## 3. Architecture
 
+### 3.1 Shared local MCP runtime
+
+- Codex and Claude connect to one loopback streamable-HTTP Basic Memory service instead of launching one stdio process per chat.
+- The macOS service is supervised by `launchd`, version-pinned, constrained to the `engram` project, and backed by an Engram-owned runtime directory separate from legacy Basic Memory clients.
+- Health means a successful MCP initialize followed by Basic Memory version diagnostics and an exact `engram` project constraint. A listening TCP port alone is insufficient.
+- SessionStart and PreCompact probe immediately. UserPromptSubmit uses a short per-chat cache. Outage and recovery notifications are transition-based to avoid warning floods.
+- While unhealthy, agents may continue using native context but must not claim durable recall or capture. Checkpoint-dependent history consolidation is forbidden.
+
+### 3.2 Native history boundary
+
+- Engram stores semantic project knowledge and a compact mutable procedure checkpoint; it never stores transcript dumps.
+- Codex history warnings begin at 256 MiB per task. Normal work stops at a 2 GiB emergency boundary without changing the chat's persistent responsibility.
+- Aggregate Codex history warns at 40 GiB and hard-stops normal work at 50 GiB. An installation already above 50 GiB receives one fixed 512 MiB migration allowance above its recorded baseline.
+- Native Codex history is never rewritten until copied-session tests prove same-thread resume, semantic continuity, and automatic rollback.
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  Engram plugin (Claude Code)                                  │
-│   • slash commands  • hooks  • a "how to use the graph" skill │
+│  Engram integration (Codex + Claude Code)                     │
+│   • skills/commands  • health hooks  • history guard           │
 └───────────────┬──────────────────────────────────────────────┘
                 │ configures + drives
                 ▼
 ┌──────────────────────────────────────────────────────────────┐
-│  Basic Memory (MCP server)  ← the engine, not our code        │
+│  One supervised Basic Memory HTTP MCP service                 │
 │   read/write/traverse markdown as a typed-relation graph      │
 └───────────────┬──────────────────────────────────────────────┘
                 │ operates on
@@ -86,7 +103,7 @@ No single instruction-driven mechanism is guaranteed, so the routing is layered,
 2. **Deterministic interceptor.** A `UserPromptSubmit` hook (`engram-prompt-router.sh`) regex-detects memory-intent verbs in the actual prompt and injects an `additionalContext` instruction to route to Engram — fires on the words, every prompt, independent of model judgment.
 3. **Always-loaded directive.** The global `~/.claude/CLAUDE.md` block (installed by adopt) keeps the routing rule in context every session, in every project.
 4. **Standing rule.** The `using-the-graph` skill's "Engram OWNS the remember verb" section.
-5. **Skill auto-invocation.** `remember`/`recall` skill `description` + `when_to_use` trigger phrases bias the model to pick them on natural-language memory requests.
+5. **Skill auto-invocation.** The `remember`/`recall` skill descriptions include the natural-language trigger phrases that bias the model to pick them on memory requests.
 
 If layer 1 is active, the rest are belt-and-suspenders; if a user declines disabling native memory, layers 2–5 still route the verb.
 | `/engram:revert` | **The "deinit" — undo `adopt`.** Restore native Claude memory from the pre-adopt backup: re-enable native auto-memory (`autoMemoryEnabled`), un-thin the native `MEMORY.md`/`CLAUDE.md`, remove the routing directive. Graph preserved by default (re-adopting stays trivial); optional full wipe on a second explicit yes. Full plugin removal is Claude Code's `/plugin uninstall engram`. The reversible partner to `adopt`. |
@@ -117,6 +134,8 @@ Bundled as a skill so every agent follows the same rules.
 - **Routing rule** (where does a fact go?): derivable from code → store nowhere, keep a pointer · reusable across projects → **global** · project-specific → **project** · idea in flight → Obsidian inbox (existing pipeline). Never two homes.
 - **Volatility marker:** volatile facts (versions, SKUs, pricing) carry `verify before quoting — last checked YYYY-MM-DD`; evergreen rules don't.
 - **Write discipline:** before creating a note, search the graph; if it exists, update in place — never fork a duplicate.
+- **Technical specificity:** record exact paths/symbols, contracts, schemas/data flow, commands, constraints, edge cases, failure modes, decisions+why, and dated sources where relevant. Do not duplicate routine code.
+- **State separation:** a live procedure checkpoint is a small mutable handoff, not the encyclopedia. Temporary research lives under `projects/<name>/research/` until promoted or discarded.
 
 ## 8. Capture inbox (phone-friendly) — first-class component
 

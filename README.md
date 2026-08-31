@@ -1,10 +1,10 @@
 # 🧠 Engram
 
-**Durable, graph-shaped memory for Claude Code — a second brain, shared across every project.**
+**Durable, graph-shaped memory for Codex and Claude Code — a second brain, shared across every project.**
 
-Engram replaces Claude's ad-hoc memory with a knowledge graph stored as **plain markdown** (git-versioned, Obsidian-browsable) and queried by agents over MCP. One store, two buckets: **`global/`** carries reusable knowledge across all your projects, and **`projects/<name>/`** holds app-specific facts that link up into it. Claude recalls from it before work and writes to it as it learns — automatically.
+Engram replaces ad-hoc agent memory with a knowledge graph stored as **plain markdown** (git-versioned, Obsidian-browsable) and queried over MCP. One store, two buckets: **`global/`** carries reusable knowledge across all your projects, and **`projects/<name>/`** is each project's operational encyclopedia. Codex and Claude recall from it before work and write to it as they learn — automatically.
 
-> Built on [Basic Memory](https://github.com/basicmachines-co/basic-memory). Engram packages it into a turnkey Claude Code plugin with a two-tier layout, conventions, automatic recall/capture, a phone-friendly capture inbox, and a safe one-command migration off Claude's native memory. **macOS and Linux.**
+> Built on [Basic Memory](https://github.com/basicmachines-co/basic-memory). Engram packages it with a two-tier layout, conventions, automatic recall/capture, a phone-friendly capture inbox, and a safe migration off Claude's native memory. The bundled shared-service installer is turnkey on **macOS**; the knowledge graph and host-neutral plugin behavior remain usable on **Linux** with a separately configured user service.
 
 ## Why
 
@@ -12,13 +12,13 @@ Engram replaces Claude's ad-hoc memory with a knowledge graph stored as **plain 
 - **A graph, not a list.** Entities + typed relations (`uses`, `supersedes`, `applies_to`), so knowledge is *traversable*, not grepped.
 - **Two buckets, no duplication.** Reusable patterns live once in `global/`; each project's facts live in `projects/<name>/` and link up.
 - **Agents actually consult it.** A session-start briefing plus read/write MCP tools mid-task — not "hope it gets recalled."
-- **Compact by design.** Notes are operational memory for the agent: many small, linked nodes — not essays — so recall is sharp and cheap.
+- **Precise by design.** Notes are concept-scoped and structured, but technically complete: exact entry points, contracts, data flow, commands, constraints, edge cases, decisions, and sources where needed.
 - **Capture from anywhere.** A markdown inbox you can sync to your phone (Obsidian or any sync); triage curates it into the graph.
 - **Safe & reversible.** Going live backs up *everything* first and waits for your explicit yes; one command puts native memory back.
 
 ## How to install
 
-**Prerequisites:** [Claude Code](https://claude.com/claude-code), `git`, and [uv](https://docs.astral.sh/uv/) (Engram installs uv for you if it's missing). `jq` is optional (enables one hook; safely skipped if absent). Works on **macOS and Linux**.
+**Prerequisites:** Codex and/or [Claude Code](https://claude.com/claude-code), `git`, [uv](https://docs.astral.sh/uv/), `curl`, and `jq`. The shared supervised service installer described below currently supports **macOS**. It discovers the installing user's home directory and `uvx`; no developer-specific absolute paths are shipped.
 
 ```bash
 # 1. add this repo as a plugin marketplace
@@ -34,6 +34,35 @@ Engram replaces Claude's ad-hoc memory with a knowledge graph stored as **plain 
 ```
 
 That's the whole setup. `/engram:adopt` self-bootstraps everything (you don't need `/engram:setup` first). When it finishes, it offers to **scan** the current project into a knowledge base — say yes, or do it later with `/engram:scan`.
+
+### Codex integration
+
+Engram includes a Codex manifest and a Codex-specific lifecycle adapter while preserving Claude compatibility. On macOS, Codex and Claude share one Basic Memory 0.23.2 streamable-HTTP process supervised by `launchd`; new chats no longer spawn one indexing process each. The service binds only to `127.0.0.1:18765` and is constrained to the `engram` project.
+
+The macOS service is installed from the plugin source with `bash scripts/engram-install-service.sh`. The installer generates `~/Library/LaunchAgents/com.yegor.engram.basic-memory.plist` for the current account, discovers `uvx`, validates the plist, and backs up a changed existing plist before replacing it. The `com.yegor...` string is a stable service identifier, not a username or machine binding.
+
+Every chat checks the service through a real MCP initialize + diagnostics + project handshake. `SessionStart` and `PreCompact` checks are uncached; `UserPromptSubmit` checks are cached for five minutes per chat. An outage produces one visible warning, keeps the offline policy in agent context, forbids claims of durable capture, and blocks Codex compaction until checkpoint storage recovers. Recovery is announced once. Codex also marks the MCP server `required`, so a new or resumed task cannot silently start without it.
+
+The live checkpoint is only a handoff mechanism. Permanent project knowledge belongs in canonical encyclopedia notes. Unverified research is staged temporarily under `projects/<name>/research/`; validated conclusions are migrated into permanent product/system/architecture/runbook notes, and stale research is removed rather than becoming a second memory pile.
+
+Default limits:
+
+- At **256 MiB per task**, Codex must update the project's mutable live checkpoint.
+- At **2 GiB per task**, normal work is blocked at an emergency boundary. The same responsibility task is retained; only checkpoint, recovery, and verified history-maintenance work remains allowed.
+- At **40 GiB total** under `~/.codex/sessions`, Codex warns that aggregate history is approaching its ceiling.
+- At **50 GiB total**, normal prompts are blocked until old tasks are cleaned or archived.
+- If installed while history is already over 50 GiB, Engram records a one-time legacy baseline and permits at most **512 MiB** of additional growth. Once cleanup drops below 50 GiB, it permanently switches to the absolute cap.
+
+The guard never copies transcripts into Engram and does not yet delete or rewrite Codex history. Persistent-history pruning remains disabled until copied-session resume and rollback tests prove a safe procedure. It retains only operational state: objective, progress, decisions and why, exact references, verification, blockers, and the next action.
+
+Useful commands:
+
+- `scripts/engram-status.sh` — full MCP, launchd, process-count, and Codex-history status.
+- `scripts/engram-codex-hook.sh --status` — active history mode and thresholds.
+- `scripts/engram-recovery-command.sh` — print the platform-appropriate service restart command.
+- `scripts/engram-install-service.sh` — install or repair the current macOS user's shared service.
+
+Limits can be overridden with the `ENGRAM_CODEX_*` environment variables documented in the adapter.
 
 Want to try it *alongside* native memory before committing? Run `/engram:setup` (install only, no takeover), then `/engram:adopt` when ready. Changed your mind after adopting? `/engram:revert` restores native memory exactly as it was.
 
@@ -89,7 +118,7 @@ Two top-level buckets: **`global/`** (reusable across projects) and **`projects/
 - **Claude Code** — the host.
 - **git** — the store is a git repo.
 - **[uv](https://docs.astral.sh/uv/)** — runs Basic Memory (Engram's `setup` installs it if missing). macOS and Linux.
-- **jq** *(optional)* — enables the deterministic "remember" prompt router; without it that one hook is a silent no-op.
+- **curl + jq** — required by the end-to-end MCP health probe and deterministic memory router.
 - **[Obsidian](https://obsidian.md)** *(optional)* — to browse/edit the graph as a human.
 
 ## Safety
