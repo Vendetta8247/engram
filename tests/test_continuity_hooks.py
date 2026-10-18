@@ -105,6 +105,10 @@ class ContinuityHookTests(unittest.TestCase):
         self.transcript.write_text('{"type":"test-fixture"}\n', encoding="utf-8")
         self.original_transcript = self.transcript.read_bytes()
         self.env = {
+            # CLI tests clear the process environment. Supply a temporary home
+            # for both POSIX and Windows instead of inheriting the user's home.
+            "HOME": str(self.root),
+            "USERPROFILE": str(self.root),
             "CODEX_HOME": str(self.root / "codex"),
             "ENGRAM_CONFIG_PATH": str(self.root / "settings.json"),
             "ENGRAM_CHECKPOINTS_ENABLED": "true",
@@ -336,7 +340,7 @@ class ContinuityHookTests(unittest.TestCase):
             runtime.main()
         result = json.loads(stdout.getvalue())
         self.assertIs(result.get("continue"), False, result)
-        self.assertTrue(result.get("systemMessage"), result)
+        self.assertIn("Checkpoint state write failed", result.get("systemMessage", ""), result)
         self.assertEqual(ledger.verified_generation, 0)
         self.assertIsNone(ledger.identifier)
         self.assertEqual(self.transcript.read_bytes(), self.original_transcript)
