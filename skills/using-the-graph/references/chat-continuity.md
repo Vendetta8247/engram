@@ -74,12 +74,20 @@ uv run --no-project --offline --python 3.12 python "<resolved-plugin-root>/scrip
 
 Inspect whether the current generation has a verified, fresh receipt. The
 default age limit is 300 seconds (`ENGRAM_CHECKPOINT_MAX_AGE_SECONDS` can change
-it). With checkpoints enabled, Stop requires a current-turn checkpoint, and
-PreCompact freshly revalidates the remote note. Missing, stale or failed
-verification blocks compaction. There is no remaining-token-budget input and
-PreCompact cannot ask the model to write a checkpoint; save earlier and use the
-Stop continuation to complete/verify the save. If that recovery continuation
-still cannot save, report the visible failure and stop rather than claim
+it). With checkpoints enabled, Stop requires a current-turn checkpoint.
+PreCompact attempts fresh remote revalidation as a best-effort check, but never
+vetoes compaction because a checkpoint is missing, stale, dirty, offline or
+unvalidated. It warns explicitly when the latest work lacks verified coverage.
+There is no remaining-token-budget input, and the model cannot save before
+compaction that happens before its next turn; blocking it there would prevent
+the very save needed to recover. Native Codex history remains untouched.
+
+Continue automatic checkpoint saves before long actions and at milestones.
+After compaction, recover and reconcile the previous checkpoint with the
+remaining native context and referenced production files, then save and verify
+the current state. Never present an older checkpoint as covering later work.
+The Stop gate still requires a verified current-turn save. If its recovery
+continuation cannot save, report the visible failure and stop rather than claim
 success or loop indefinitely.
 
 ## Restore after restart or compaction
@@ -102,8 +110,9 @@ If local continuity files are missing, recovery still checks the graph for this
 chat. It preserves the graph note's project route and advances the local revision
 without creating a save receipt. Reconcile the recovered progress before saving
 again; a direct save cannot replace an existing graph checkpoint until recovery
-has confirmed its content and route. Stop and compaction still require a new
-verified save. Legacy responses without file-path metadata can restore content,
+has confirmed its content and route. Stop still requires a new verified save;
+compaction may proceed with an explicit warning that coverage is incomplete.
+Legacy responses without file-path metadata can restore content,
 but cannot safely authorize a replacement after local state loss.
 
 Turning checkpoints off intentionally disables automatic saves and checkpoint

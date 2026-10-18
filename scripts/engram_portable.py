@@ -350,6 +350,22 @@ def restore_context(continuity: Continuity, state: dict) -> str:
     return context
 
 
+def deferred_compaction_checkpoint(reason: str, session_id: str = "") -> dict:
+    # At the context limit, model execution cannot resume until compaction
+    # finishes. Requiring the model to save first creates a permanent loop.
+    # Native history is retained; this warning does not mint a save receipt.
+    message = (
+        "ENGRAM CHECKPOINT WARNING: " + reason + " No fresh checkpoint save was confirmed. "
+        "Allow native compaction to continue; preserve native history and staged checkpoint attempts. "
+        "After compaction, reconcile the last saved checkpoint with newer conversation progress "
+        "and save/verify the current state before finishing the turn. An older checkpoint does not "
+        "cover unsaved work. "
+    )
+    if session_id:
+        message += capture_instruction(session_id)
+    return {"continue": True, "systemMessage": message.strip(), "suppressOutput": False}
+
+
 def handle_hook(payload: dict, environ: dict | None = None, health: dict | None = None) -> dict:
     env = dict(os.environ if environ is None else environ)
     event = payload.get("hook_event_name", "")
@@ -394,20 +410,16 @@ def handle_hook(payload: dict, environ: dict | None = None, health: dict | None 
     offline = "" if healthy else "ENGRAM IS OFFLINE. Do not claim durable recall or saves succeeded. Preserve native context; do not prune or rewrite native history until memory storage recovers. "
     if event == "PreCompact":
         if not healthy and enabled:
-            return {"continue": False, "stopReason": "Engram checkpoint storage is unavailable; recover memory before compaction.",
-                    "systemMessage": visible or offline}
+            return deferred_compaction_checkpoint(visible or offline, session_id)
         if enabled:
             if needs_checkpoint:
-                return {"continue": False, "stopReason": "Engram paused compaction because this chat has no fresh verified checkpoint. Save and verify the current turn's progress, then retry.",
-                        "systemMessage": checkpoint}
+                return deferred_compaction_checkpoint("This chat's checkpoint is missing, stale or behind the current revision.", session_id)
             try:
                 recovered = continuity.recover()
             except (OSError, ValueError) as error:
-                return {"continue": False, "stopReason": "Engram could not revalidate the recovery checkpoint before compaction: " + str(error),
-                        "systemMessage": "Preserve native chat context and recover the saved checkpoint before retrying compaction."}
+                return deferred_compaction_checkpoint("Engram could not revalidate the recovery checkpoint: " + str(error), session_id)
             if recovered.get("source") != "graph" or not recovered.get("graph_validated") or recovered.get("generation") != state.get("generation"):
-                return {"continue": False, "stopReason": "Engram could not confirm the current checkpoint in the graph. A local snapshot alone does not confirm a fresh graph save.",
-                        "systemMessage": "Compaction paused; restore memory access and save/verify the current progress."}
+                return deferred_compaction_checkpoint("Engram could not confirm the current checkpoint in the graph; a local snapshot alone is not a fresh graph save.", session_id)
         if visible:
             return {"continue": True, "systemMessage": visible, "suppressOutput": False}
         return {}
@@ -511,12 +523,15 @@ def main() -> int:
     except (OSError, ValueError, SettingsError) as error:
         message = f"Engram: {error}"
         if args.command == "hook":
-            # An explicit supported denial is needed for compaction failures;
-            # nonzero exit status alone is not a reliable compaction gate.
+            # Never strand a context-limited chat when recovery checks fail.
+            # Other lifecycle gates still require verified progress.
+            if isinstance(locals().get("payload"), dict) and payload.get("hook_event_name") == "PreCompact":
+                print(json.dumps(deferred_compaction_checkpoint(message, str(payload.get("session_id", "")))))
+                return 0
             if isinstance(locals().get("payload"), dict) and payload.get("hook_event_name") == "PreToolUse":
                 print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": message + ". Recovery state could not be recorded before running this tool."}, "systemMessage": message}))
                 return 0
-            if isinstance(locals().get("payload"), dict) and payload.get("hook_event_name") in ("SessionStart", "UserPromptSubmit", "PreCompact", "Stop"):
+            if isinstance(locals().get("payload"), dict) and payload.get("hook_event_name") in ("SessionStart", "UserPromptSubmit", "Stop"):
                 print(json.dumps({"continue": False, "stopReason": message + ". Recovery protection could not be verified; preserve native context.", "systemMessage": message}))
                 return 0
             print(json.dumps({"continue": True, "systemMessage": message + ". No checkpoint save was confirmed; preserve native history.", "suppressOutput": False}))

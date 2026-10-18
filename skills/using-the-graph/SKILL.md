@@ -120,10 +120,15 @@ Read only the selected notes; avoid unbounded `build_context` neighborhoods.
   attempt is written first; only graph write plus exact readback earns a
   verified receipt. Restore from the validated graph or clearly marked last
   verified local snapshot on resume. Stop requires current-turn verification;
-  PreCompact freshly revalidates it and blocks on missing/stale/failed saves.
+  PreCompact attempts fresh revalidation and explicitly warns about missing,
+  stale, dirty, offline or unvalidated coverage without blocking compaction.
   Save earlier: the hook has no remaining-token input and cannot make the model
-  write during PreCompact. This restores checked work state, not full chat
-  wording or unsaved actions, and never cleans native Codex history.
+  write before compaction that precedes its next turn. After compaction, recover
+  and reconcile the last checkpoint with newer progress, then save and verify
+  the current state. Never imply an older checkpoint covers later work.
+  This does not disable automatic saves or the Stop gate. It restores checked work
+  state, not full chat wording or unsaved actions, and never cleans native Codex
+  history.
   Consult `scripts/engram_settings.py status` first: `checkpoints_enabled` in
   `~/.engram/settings.json` defaults on; `ENGRAM_CONFIG_PATH` selects the file
   and `ENGRAM_CHECKPOINTS_ENABLED` overrides the value. Invalid settings are an

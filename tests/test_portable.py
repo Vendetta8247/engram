@@ -92,11 +92,16 @@ class PortableTests(unittest.TestCase):
         self.assertIn("checkpoints are disabled", context)
         self.assertNotIn("Update one small", context)
 
-    def test_offline_compaction_gate_respects_toggle(self):
-        self.assertFalse(self.hook("PreCompact", health=OFFLINE)["continue"])
+    def test_offline_compaction_defers_recovery_and_respects_disabled_toggle(self):
+        result = self.hook("PreCompact", health=OFFLINE)
+        self.assertTrue(result["continue"])
+        self.assertNotIn("stopReason", result)
+        self.assertIn("no fresh checkpoint save was confirmed", result["systemMessage"].lower())
+        self.assertIn("after compaction", result["systemMessage"].lower())
         result = self.hook("PreCompact", enabled=False, health=OFFLINE)
         self.assertTrue(result["continue"])
         self.assertIn("unavailable", result["systemMessage"])
+        self.assertNotIn("after compaction", result["systemMessage"].lower())
 
     def test_checkpoint_request_is_gated_by_settings(self):
         self.grow(1024**2)

@@ -1,4 +1,4 @@
-"""Chat continuity gates use verified saves, never hook execution as an ACK."""
+"""Compaction stays live without treating hook execution as a verified save."""
 
 import copy
 import io
@@ -148,9 +148,15 @@ class ContinuityHookTests(unittest.TestCase):
         ledger.verify()
         return ledger
 
-    def assert_compaction_blocked(self, result):
-        self.assertIs(result.get("continue"), False, result)
-        self.assertTrue(result.get("stopReason") or result.get("systemMessage"), result)
+    def assert_compaction_allows_deferred_recovery(self, result):
+        self.assertIs(result.get("continue"), True, result)
+        self.assertNotEqual(result.get("decision"), "block", result)
+        self.assertNotIn("stopReason", result)
+        warning = result.get("systemMessage", "").lower()
+        self.assertIn("no fresh checkpoint save was confirmed", warning, result)
+        self.assertIn("native history", warning, result)
+        self.assertIn("after compaction", warning, result)
+        self.assertIn("reconcile", warning, result)
 
     def test_small_chat_prompt_starts_capture_generation_and_stop_requests_save(self):
         prompt = self.begin()
@@ -170,7 +176,7 @@ class ContinuityHookTests(unittest.TestCase):
         self.assertIs(retry.get("continue"), False, retry)
         self.assertTrue(retry.get("systemMessage"), retry)
         self.assertEqual(self.ledger().verified_generation, 0)
-        self.assert_compaction_blocked(self.hook("PreCompact"))
+        self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact"))
 
     def test_verified_save_allows_stop_including_the_continuation(self):
         ledger = self.verified()
@@ -186,15 +192,59 @@ class ContinuityHookTests(unittest.TestCase):
         self.begin()
         self.assertEqual((ledger.generation, ledger.verified_generation), (2, 1))
         self.assertEqual(self.hook("Stop").get("decision"), "block")
-        self.assert_compaction_blocked(self.hook("PreCompact"))
+        self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact"))
 
     def test_tool_work_after_a_midturn_save_invalidates_that_checkpoint(self):
         ledger = self.verified()
         result = self.hook("PreToolUse", tool_name="apply_patch", tool_input={"command": "fixture"})
         self.assertEqual(result, {})
         self.assertEqual((ledger.generation, ledger.verified_generation), (2, 1))
-        self.assert_compaction_blocked(self.hook("PreCompact"))
+        self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact"))
         self.assertEqual(self.hook("Stop").get("decision"), "block")
+
+    def test_repeated_precompact_before_model_sampling_never_deadlocks_or_verifies_dirty_work(self):
+        ledger = self.verified()
+        # Reproduce a resumed chat already over the context limit. The model
+        # cannot sample a checkpoint-save call until native compaction succeeds.
+        ledger.generation = 7
+        ledger.verified_generation = 6
+        before = copy.deepcopy(ledger.status())
+        begin_calls = ledger.begin_calls
+        for attempt in range(3):
+            with self.subTest(attempt=attempt):
+                self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact"))
+                self.assertEqual(ledger.status(), before)
+                self.assertEqual(ledger.begin_calls, begin_calls)
+                self.assertEqual(self.transcript.read_bytes(), self.original_transcript)
+        self.assertEqual(self.hook("Stop").get("decision"), "block")
+
+    def test_deferred_compaction_does_not_create_or_refresh_verification_receipts(self):
+        for condition in ("missing", "dirty", "expired", "offline", "local", "older", "unvalidated", "error"):
+            with self.subTest(condition=condition):
+                ledger = self.ledger(condition)
+                health = HEALTHY
+                if condition != "missing":
+                    ledger.begin_turn()
+                    ledger.verify()
+                if condition == "dirty":
+                    ledger.begin_turn()
+                elif condition == "expired":
+                    ledger.verified_at = time.time() - 301
+                elif condition == "offline":
+                    health = OFFLINE
+                elif condition == "local":
+                    ledger.source = "local_snapshot"
+                    ledger.graph_validated = False
+                elif condition == "older":
+                    ledger.recovered_generation = 0
+                elif condition == "unvalidated":
+                    ledger.graph_validated = False
+                elif condition == "error":
+                    ledger.recover_error = OSError("Readback unavailable")
+                before = copy.deepcopy(ledger.status())
+                self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact", session_id=condition, health=health))
+                self.assertEqual(ledger.status(), before)
+                self.assertEqual(self.transcript.read_bytes(), self.original_transcript)
 
     def test_checkpoint_save_can_verify_its_own_tool_revision(self):
         ledger = self.verified()
@@ -206,59 +256,61 @@ class ContinuityHookTests(unittest.TestCase):
     def test_other_chat_save_does_not_satisfy_this_chat(self):
         self.verified("chat-a")
         self.begin("chat-b")
-        self.assert_compaction_blocked(self.hook("PreCompact", session_id="chat-b"))
+        self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact", session_id="chat-b"))
         self.assertEqual(self.hook("Stop", session_id="chat-b").get("decision"), "block")
         self.assertEqual(self.ledger("chat-a").verified_generation, 1)
         self.assertEqual(self.ledger("chat-b").verified_generation, 0)
         self.assertEqual({item[0] for item in self.constructor_calls}, {"chat-a", "chat-b"})
 
-    def test_compaction_requires_an_existing_verified_receipt(self):
-        self.assert_compaction_blocked(self.hook("PreCompact"))
+    def test_missing_verified_receipt_defers_recovery_without_blocking_compaction(self):
+        self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact"))
         self.assertIsNone(self.ledger().identifier)
 
-    def test_compaction_reads_back_current_checkpoint_before_allowing(self):
+    def test_compaction_revalidates_current_checkpoint_without_warning(self):
         ledger = self.verified()
         result = self.hook("PreCompact")
         self.assertIsNot(result.get("continue"), False, result)
         self.assertGreater(ledger.recover_calls, 0)
+        self.assertNotIn("systemMessage", result)
+        self.assertEqual((ledger.generation, ledger.verified_generation), (1, 1))
 
-    def test_compaction_rejects_expired_verification(self):
+    def test_expired_verification_defers_recovery_without_blocking_compaction(self):
         ledger = self.verified()
         ledger.verified_at = time.time() - 301
-        self.assert_compaction_blocked(self.hook("PreCompact"))
+        self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact"))
 
-    def test_compaction_rejects_older_remote_generation(self):
+    def test_older_remote_generation_defers_recovery_without_blocking_compaction(self):
         ledger = self.verified()
         ledger.recovered_generation = 0
-        self.assert_compaction_blocked(self.hook("PreCompact"))
+        self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact"))
 
-    def test_compaction_rejects_local_snapshot_even_when_health_is_good(self):
+    def test_local_snapshot_defers_recovery_even_when_health_is_good(self):
         ledger = self.verified()
         ledger.source = "local_snapshot"
         ledger.graph_validated = False
-        self.assert_compaction_blocked(self.hook("PreCompact"))
+        self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact"))
 
-    def test_local_snapshot_cannot_allow_compaction_through_an_inconsistent_validation_flag(self):
+    def test_local_snapshot_cannot_confirm_fresh_save_through_inconsistent_validation_flag(self):
         ledger = self.verified()
         ledger.source = "local_snapshot"
         ledger.graph_validated = True
-        self.assert_compaction_blocked(self.hook("PreCompact"))
+        self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact"))
 
-    def test_compaction_rejects_unvalidated_graph_response(self):
+    def test_unvalidated_graph_response_defers_recovery_without_blocking_compaction(self):
         ledger = self.verified()
         ledger.graph_validated = False
-        self.assert_compaction_blocked(self.hook("PreCompact"))
+        self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact"))
 
-    def test_compaction_rejects_read_validation_failures(self):
+    def test_read_validation_failures_defer_recovery_without_blocking_compaction(self):
         for error in (FakeContinuityError("Readback generation mismatch"), OSError("Readback failed")):
             with self.subTest(error=type(error).__name__):
                 ledger = self.verified()
                 ledger.recover_error = error
-                self.assert_compaction_blocked(self.hook("PreCompact"))
+                self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact"))
 
     def test_offline_compaction_never_uses_previously_verified_receipt_as_ack(self):
         self.verified()
-        self.assert_compaction_blocked(self.hook("PreCompact", health=OFFLINE))
+        self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact", health=OFFLINE))
 
     def test_startup_recovers_progress_and_a_recovery_pointer(self):
         ledger = self.verified()
@@ -291,7 +343,7 @@ class ContinuityHookTests(unittest.TestCase):
         self.assertIn("local", context.lower())
         self.assertIn("snapshot", context.lower())
         self.assertIn("offline", context.lower())
-        self.assert_compaction_blocked(self.hook("PreCompact", health=OFFLINE))
+        self.assert_compaction_allows_deferred_recovery(self.hook("PreCompact", health=OFFLINE))
 
     def test_startup_does_not_invent_a_completed_save_or_start_a_new_generation(self):
         result = self.hook("SessionStart", source="startup")
@@ -344,6 +396,25 @@ class ContinuityHookTests(unittest.TestCase):
         self.assertEqual(ledger.verified_generation, 0)
         self.assertIsNone(ledger.identifier)
         self.assertEqual(self.transcript.read_bytes(), self.original_transcript)
+
+    def test_precompact_cli_exceptions_defer_recovery_without_blocking_or_faking_a_save(self):
+        ledger = self.verified()
+        before = copy.deepcopy(ledger.status())
+        payload = {"hook_event_name": "PreCompact", "session_id": "trailer-chat",
+                   "cwd": str(self.workspace), "transcript_path": str(self.transcript)}
+        for error in (OSError("Checkpoint state unreadable"), ValueError("Invalid checkpoint settings")):
+            with self.subTest(error=type(error).__name__):
+                stdin = io.TextIOWrapper(io.BytesIO(json.dumps(payload).encode("utf-8")), encoding="utf-8")
+                stdout = io.StringIO()
+                with patch.object(sys, "argv", ["engram_portable.py", "hook"]), patch.object(sys, "stdin", stdin), \
+                        patch.object(sys, "stdout", stdout), patch.dict(os.environ, self.env, clear=True), \
+                        patch.object(runtime, "handle_hook", side_effect=error):
+                    self.assertEqual(runtime.main(), 0)
+                result = json.loads(stdout.getvalue())
+                self.assert_compaction_allows_deferred_recovery(result)
+                self.assertIn(str(error), result["systemMessage"])
+                self.assertEqual(ledger.status(), before)
+                self.assertEqual(self.transcript.read_bytes(), self.original_transcript)
 
     def test_failed_pretool_state_write_uses_the_supported_tool_denial_shape(self):
         ledger = self.verified()

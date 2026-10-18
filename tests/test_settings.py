@@ -227,7 +227,7 @@ class ShellAdapterTests(unittest.TestCase):
         ])
         self.assertFalse((self.directory / ".codex/engram").exists())
 
-    def test_missing_or_failed_portable_runtime_explicitly_denies_protected_hooks(self):
+    def test_runtime_failure_keeps_other_gates_but_allows_compaction_recovery(self):
         self.env["PLUGIN_ROOT"] = str(self.root)
         for missing in (False, True):
             if missing:
@@ -239,8 +239,12 @@ class ShellAdapterTests(unittest.TestCase):
                     result = self.run_script(event=event)
                     self.assertEqual(result.returncode, 0, result.stderr)
                     output = json.loads(result.stdout)
-                    self.assertIs(output.get("continue"), False, output)
+                    self.assertIs(output.get("continue"), event == "PreCompact", output)
                     self.assertTrue(output.get("systemMessage"), output)
+                    if event == "PreCompact":
+                        self.assertNotIn("stopReason", output)
+                        self.assertIn("No fresh checkpoint save was confirmed", output["systemMessage"])
+                        self.assertIn("After compaction", output["systemMessage"])
 
     def test_disabled_compaction_warns_and_continues_if_runtime_cannot_run(self):
         self.config.write_text('{"checkpoints_enabled": false}')

@@ -34,8 +34,8 @@ if [ "$ACTION" = hook ]; then
       exit 0
     fi
   fi
-  # Failed interpreter startup must not silently permit checkpoint-dependent
-  # compaction. Normal sessions remain usable to repair the installation.
+  # Report runtime failures without stranding context-limited chats that must
+  # compact before the agent can repair the installation or save progress.
   event="$(printf '%s' "$INPUT" | jq -r '.hook_event_name // empty' 2>/dev/null)"
   fallback_checkpoints="$(bash "$ROOT/scripts/engram-codex-hook.sh" --checkpoints-enabled 2>/dev/null)" || fallback_checkpoints=true
   if [ ! -d "${ENGRAM_CODEX_STATE_DIR:-${CODEX_HOME:-$HOME/.codex}/engram}/continuity" ] && [ ! -f "${ENGRAM_STORE_PATH:-$HOME/Engram}/INDEX.md" ]; then
@@ -49,7 +49,7 @@ if [ "$ACTION" = hook ]; then
   if [ "$event" = PreToolUse ] && [ "$fallback_checkpoints" != false ]; then
     printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Engram could not record recovery state before this tool. Repair the cached Python 3.12 runtime."},"systemMessage":"Chat progress protection could not be verified."}'
   elif [ "$event" = PreCompact ] && [ "$fallback_checkpoints" != false ]; then
-    printf '%s\n' '{"continue":false,"stopReason":"Engram could not run its recovery checker. Preserve native context and repair the Python runtime before compaction.","systemMessage":"Run Engram setup to restore the cached Python 3.12 runtime; progress protection was not verified."}'
+    printf '%s\n' '{"continue":true,"systemMessage":"ENGRAM CHECKPOINT WARNING: Engram could not run its recovery checker. No fresh checkpoint save was confirmed. Preserve native history and staged attempts. After compaction, repair the cached Python 3.12 runtime, reconcile the last checkpoint with newer progress, then save and verify the current state before finishing the turn.","suppressOutput":false}'
   elif [ "$fallback_checkpoints" != false ]; then
     printf '%s\n' '{"continue":false,"stopReason":"Engram could not verify chat recovery because its runtime failed.","systemMessage":"Progress was not confirmed in Engram. Preserve native history and repair the cached Python 3.12 runtime."}'
   else
