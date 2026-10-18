@@ -25,14 +25,17 @@ When the research reaches a conclusion:
 1. Verify it against authoritative sources, code, or a reproducible experiment.
 2. Migrate stable facts, decisions and rationale into the canonical permanent
    notes under `product/`, `systems/`, `screens/`, `architecture/`, `runbooks/`,
-   or the appropriate global domain. Include exact sources and verification date
+   creative `brief/`, `production/`, `assets/`, `delivery/`, or the appropriate
+   global domain. Include exact sources and verification date
    where the claim can change.
 3. Update the project `INDEX.md` or relations so the canonical knowledge is
    discoverable.
 4. Confirm that no unique actionable knowledge remains only in the temporary
    note.
 5. Remove the temporary note, or reduce it to a short pointer when provenance is
-   genuinely useful. Reindex afterward.
+   genuinely useful. MCP writes update the index; direct file changes use the
+   supervised service startup sync, then a bounded search to verify. Never run
+   unattended `basic-memory reindex` on 0.23.2 (it can fail to exit).
 
 Rejected research is not automatically permanent. Preserve only a reusable
 negative finding—what was tested, why it failed, and the conditions—otherwise

@@ -12,12 +12,103 @@ RECOVERY_COMMAND="${RECOVERY_COMMAND:-restart the configured Engram shared MCP s
 
 ACTION="${1:-hook}"
 case "$ACTION" in
-  --status|--rebaseline-after-cleanup) INPUT='{}' ;;
+  --status|--rebaseline-after-cleanup|--checkpoints-enabled) INPUT='{}' ;;
   *) INPUT="$(cat)" ;;
 esac
 
+# Codex uses the same verified per-chat recovery path on every platform. Keep
+# shell-only status/settings helpers for existing integrations, but do not run
+# the old size-bucket acknowledgement path when the portable runtime is present.
+if [ "$ACTION" = hook ]; then
+  event="$(printf '%s' "$INPUT" | jq -r '.hook_event_name // empty' 2>/dev/null)"
+  recovery_command="$(printf '%s' "$INPUT" | jq -r '.tool_input.command // .tool_input.cmd // empty' 2>/dev/null)"
+  if [ "$event" = PreToolUse ] && [ "$recovery_command" = 'uv python install 3.12' ]; then
+    printf '%s\n' '{}'
+    exit 0
+  fi
+  if [ -f "$ROOT/scripts/engram_portable.py" ] && command -v uv >/dev/null 2>&1; then
+    runtime_output="$(printf '%s' "$INPUT" | uv run --no-project --offline --python 3.12 python "$ROOT/scripts/engram_portable.py" hook)"
+    runtime_status=$?
+    if [ "$runtime_status" -eq 0 ]; then
+      printf '%s\n' "$runtime_output"
+      exit 0
+    fi
+  fi
+  # Failed interpreter startup must not silently permit checkpoint-dependent
+  # compaction. Normal sessions remain usable to repair the installation.
+  event="$(printf '%s' "$INPUT" | jq -r '.hook_event_name // empty' 2>/dev/null)"
+  fallback_checkpoints="$(bash "$ROOT/scripts/engram-codex-hook.sh" --checkpoints-enabled 2>/dev/null)" || fallback_checkpoints=true
+  if [ ! -d "${ENGRAM_CODEX_STATE_DIR:-${CODEX_HOME:-$HOME/.codex}/engram}/continuity" ] && [ ! -f "${ENGRAM_STORE_PATH:-$HOME/Engram}/INDEX.md" ]; then
+    case "$event" in
+      SessionStart|UserPromptSubmit|PreToolUse)
+        printf '%s\n' '{"systemMessage":"Engram setup is incomplete. Install its cached Python 3.12 runtime and shared memory service before relying on progress checkpoints."}'
+        exit 0
+        ;;
+    esac
+  fi
+  if [ "$event" = PreToolUse ] && [ "$fallback_checkpoints" != false ]; then
+    printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Engram could not record recovery state before this tool. Repair the cached Python 3.12 runtime."},"systemMessage":"Chat progress protection could not be verified."}'
+  elif [ "$event" = PreCompact ] && [ "$fallback_checkpoints" != false ]; then
+    printf '%s\n' '{"continue":false,"stopReason":"Engram could not run its recovery checker. Preserve native context and repair the Python runtime before compaction.","systemMessage":"Run Engram setup to restore the cached Python 3.12 runtime; progress protection was not verified."}'
+  elif [ "$fallback_checkpoints" != false ]; then
+    printf '%s\n' '{"continue":false,"stopReason":"Engram could not verify chat recovery because its runtime failed.","systemMessage":"Progress was not confirmed in Engram. Preserve native history and repair the cached Python 3.12 runtime."}'
+  else
+    printf '%s\n' '{"continue":true,"systemMessage":"Engram could not run its verified checkpoint checker. Preserve native chat history and repair the cached Python 3.12 runtime; no durable save was confirmed.","suppressOutput":false}'
+  fi
+  exit 0
+fi
+
 if ! command -v jq >/dev/null 2>&1; then
+  if [ "$ACTION" = "--checkpoints-enabled" ]; then
+    echo "Engram settings: jq is required to read checkpoint settings." >&2
+    exit 2
+  fi
   [ "$ACTION" = "--status" ] && echo "Engram Codex guard requires jq."
+  exit 0
+fi
+
+# Keep this parser aligned with engram_settings.py without requiring Python on
+# existing macOS/Linux installations. No guard state or health checks run when
+# another hook asks only for the setting.
+SETTINGS_FILE="${ENGRAM_CONFIG_PATH-${HOME}/.engram/settings.json}"
+if [ -z "${SETTINGS_FILE//[[:space:]]/}" ]; then
+  echo "Engram settings: ENGRAM_CONFIG_PATH must not be empty." >&2
+  exit 2
+fi
+case "$SETTINGS_FILE" in
+  '~') SETTINGS_FILE="$HOME" ;;
+  '~/'*) SETTINGS_FILE="${HOME}/${SETTINGS_FILE#\~/}" ;;
+esac
+CHECKPOINTS_ENABLED=true
+if [ -e "$SETTINGS_FILE" ]; then
+  if [ ! -f "$SETTINGS_FILE" ] || [ ! -r "$SETTINGS_FILE" ]; then
+    echo "Engram settings: cannot read settings file $SETTINGS_FILE." >&2
+    exit 2
+  fi
+  CHECKPOINTS_ENABLED="$(jq -r -s '
+    if length != 1 then error("settings must contain one JSON object")
+    else .[0] | if type != "object" then error("settings must be a JSON object")
+      elif has("checkpoints_enabled") and (.checkpoints_enabled | type) != "boolean"
+      then error("checkpoints_enabled must be a JSON boolean")
+      elif has("checkpoints_enabled") then .checkpoints_enabled else true end
+    end' "$SETTINGS_FILE")" || {
+      echo "Engram settings: invalid settings file $SETTINGS_FILE." >&2
+      exit 2
+    }
+fi
+if [ "${ENGRAM_CHECKPOINTS_ENABLED+x}" = x ]; then
+  checkpoint_override="$(jq -nr --arg value "$ENGRAM_CHECKPOINTS_ENABLED" '$value | ascii_downcase | gsub("^\\s+|\\s+$"; "")')"
+  case "$checkpoint_override" in
+    true|on|1) CHECKPOINTS_ENABLED=true ;;
+    false|off|0) CHECKPOINTS_ENABLED=false ;;
+    *)
+      echo "Engram settings: ENGRAM_CHECKPOINTS_ENABLED must be true/false, on/off, or 1/0." >&2
+      exit 2
+      ;;
+  esac
+fi
+if [ "$ACTION" = "--checkpoints-enabled" ]; then
+  printf '%s\n' "$CHECKPOINTS_ENABLED"
   exit 0
 fi
 
@@ -271,110 +362,22 @@ fi
 if [ "$ACTION" = "--status" ]; then
   bash "$ROOT/scripts/engram-mcp-health.sh" --status 2>/dev/null || true
   echo "Engram Codex history guard"
+  echo "  automatic checkpoints: $CHECKPOINTS_ENABLED"
+  echo "  settings: $SETTINGS_FILE"
   echo "  mode: ${MODE}"
   echo "  sessions total: $(human_bytes "$TOTAL_BYTES")"
   echo "  total warning: $(human_bytes "$EFFECTIVE_TOTAL_SOFT")"
   echo "  total hard stop: $(human_bytes "$EFFECTIVE_TOTAL_HARD")"
-  echo "  task checkpoint: $(human_bytes "$SESSION_SOFT_BYTES")"
+  if [ "$CHECKPOINTS_ENABLED" = true ]; then
+    echo "  task checkpoint: verified each turn (separate continuity status reports receipts)"
+  else
+    echo "  task checkpoint: disabled"
+  fi
   echo "  task hard stop: $(human_bytes "$SESSION_HARD_BYTES")"
   echo "  oversized legacy task allowance: $(human_bytes "$SESSION_LEGACY_GROWTH_BYTES")"
   exit 0
 fi
 
-[ -f "${HOME}/Engram/INDEX.md" ] || { [ "$EVENT" = "Stop" ] && echo '{}'; exit 0; }
-
-CHECKPOINT_INSTRUCTION="Update one compact live checkpoint in Engram for this project before doing anything else. Use the engram MCP with compact search then fetch/read of at most 1-3 routing notes; expand with targeted reads only as needed. Update the existing checkpoint instead of creating transcript-shaped notes. Keep only objective, current status, decisions and why, exact refs/commits, verification, blockers/safety, and the next action. The checkpoint is not the project encyclopedia: migrate validated product and technical knowledge into precise canonical topic notes, with exact paths/symbols/contracts/commands/edge cases and sources where relevant. Stage unverified research temporarily and promote or discard it when resolved. Never paste the transcript into Engram."
-MAINTENANCE_INSTRUCTION="Keep this same responsibility task; do not rotate tasks merely to reset context. Native-history pruning remains forbidden unless the verified salvage-and-delete procedure applies. If this task reaches its $(human_bytes "$EFFECTIVE_SESSION_HARD") emergency boundary, stop normal work, preserve the Engram checkpoint, and report the exact size."
-
-case "$EVENT" in
-  SessionStart)
-    context="ENGRAM CODEX MEMORY: Treat the project's Engram tier as its operational encyclopedia. Before non-trivial work, use compact engram search and fetch/read only 1-3 routing notes, then expand with targeted reads as the task requires; never dump broad results or transcript history into context. Permanent technical notes must be specific enough to act on, including exact paths/symbols, contracts, data flow, commands, constraints, edge cases, decisions+why, and sources where relevant. For a long procedure, maintain one separate live checkpoint. Stage unverified research temporarily, then promote validated conclusions into canonical notes or discard them."
-    [ -n "$HEALTH_POLICY" ] && context="${HEALTH_POLICY} ${context}"
-    if [ "$SESSION_BYTES" -ge "$SESSION_SOFT_BYTES" ]; then
-      context="${context} This task history is already $(human_bytes "$SESSION_BYTES"). ${CHECKPOINT_INSTRUCTION} ${MAINTENANCE_INSTRUCTION}"
-    fi
-    if [ "$MODE" = "legacy" ]; then
-      context="${context} Existing Codex history is in legacy-over-cap mode; new growth is hard-stopped at $(human_bytes "$EFFECTIVE_TOTAL_HARD") until old history is cleaned."
-    fi
-    visible_message=""
-    [ "$HEALTH_NOTIFY" = true ] && visible_message="$HEALTH_MESSAGE"
-    json_context "$context" "$visible_message"
-    ;;
-
-  UserPromptSubmit)
-    remediation=false
-    if printf '%s' "$PROMPT" | grep -iqE '(engram|checkpoint|codex[[:space:]-]+history|session[[:space:]-]+history|disk[[:space:]-]+cleanup|free[[:space:]-]+space|rotate[[:space:]-]+task)'; then
-      remediation=true
-    fi
-
-    if [ "$TOTAL_BYTES" -ge "$EFFECTIVE_TOTAL_HARD" ] && [ "$remediation" = false ]; then
-      if [ "$MODE" = "legacy" ]; then
-        json_block_prompt "Engram blocked this prompt because ~/.codex/sessions grew $(human_bytes "$LEGACY_GROWTH_BYTES") beyond its one-time legacy baseline. Clean or archive old Codex tasks first; prompts explicitly about Engram checkpoints or Codex-history cleanup remain allowed."
-      else
-        json_block_prompt "Engram blocked this prompt because ~/.codex/sessions reached the $(human_bytes "$TOTAL_HARD_BYTES") hard cap. Clean or archive old Codex tasks first; prompts explicitly about Engram checkpoints or Codex-history cleanup remain allowed."
-      fi
-      exit 0
-    fi
-
-    if [ "$SESSION_BYTES" -ge "$EFFECTIVE_SESSION_HARD" ] && [ "$remediation" = false ]; then
-      json_block_prompt "Engram blocked normal work in this $(human_bytes "$SESSION_BYTES") Codex task at its $(human_bytes "$EFFECTIVE_SESSION_HARD") emergency boundary. Keep this same responsibility task, preserve or update its Engram checkpoint, and run only verified history-maintenance or recovery work here until the boundary is resolved."
-      exit 0
-    fi
-
-    context="$HEALTH_POLICY"
-    visible_message=""
-    [ "$HEALTH_NOTIFY" = true ] && visible_message="$HEALTH_MESSAGE"
-    if [ "$SESSION_BYTES" -ge "$SESSION_SOFT_BYTES" ]; then
-      context="${context} ${CHECKPOINT_INSTRUCTION} ${MAINTENANCE_INSTRUCTION}"
-    fi
-    if printf '%s' "$PROMPT" | grep -iqE '(remember|memori[sz]e|make a note|take note|note that|note this|jot (this|that|it|down)|keep (this|that|it)?[[:space:]]*in mind|don.?t forget|for (future|later) reference|save (this|that|it)|store (this|that)|log (this|that)|write (this|that) down)'; then
-      context="${context} ENGRAM ROUTING: If this is a request to remember/save information, store it in Engram via the engram MCP, search-then-write to deduplicate, route it to the project or global tier, and tell the user what was stored. Do not use native memory."
-    fi
-    if [ "$TOTAL_BYTES" -ge "$EFFECTIVE_TOTAL_SOFT" ]; then
-      context="${context} Codex session history is near its Engram hard stop ($(human_bytes "$TOTAL_BYTES") of $(human_bytes "$EFFECTIVE_TOTAL_HARD")); keep this turn focused and checkpoint before further work."
-    fi
-    if [ -n "$context" ]; then
-      json_context "$context" "$visible_message"
-    elif [ -n "$visible_message" ]; then
-      json_system_message "$visible_message"
-    fi
-    ;;
-
-  PreCompact)
-    if [ "$HEALTHY" != true ]; then
-      json_stop "Engram stopped compaction because durable checkpoint storage is unavailable. Preserve the current native context and recover the shared MCP service first." "$HEALTH_MESSAGE"
-      exit 0
-    fi
-    echo '{}'
-    ;;
-
-  Stop)
-    if [ "$TOTAL_BYTES" -ge "$EFFECTIVE_TOTAL_HARD" ]; then
-      json_stop "Codex history reached the Engram hard stop. Update the current task checkpoint and perform verified history maintenance before normal work continues." "Engram stopped further Codex-history growth at its configured ceiling."
-      exit 0
-    fi
-    if [ "$STOP_ACTIVE" = "true" ]; then
-      echo '{}'
-      exit 0
-    fi
-    if [ "$SESSION_BYTES" -ge "$SESSION_SOFT_BYTES" ]; then
-      bucket=$((SESSION_BYTES / SESSION_SOFT_BYTES))
-      checkpoint_marker="${STATE_DIR}/checkpoint-bucket-${SAFE_SESSION_ID}"
-      previous_bucket=""
-      [ -f "$checkpoint_marker" ] && previous_bucket="$(sed -n '1p' "$checkpoint_marker" 2>/dev/null)"
-      if [ "$previous_bucket" != "$bucket" ]; then
-        atomic_write "$checkpoint_marker" "$bucket"
-        jq -n --arg reason "ENGRAM CHECKPOINT REQUIRED: this task history is $(human_bytes "$SESSION_BYTES"). ${CHECKPOINT_INSTRUCTION} ${MAINTENANCE_INSTRUCTION}" '{
-          decision: "block",
-          reason: $reason
-        }'
-        exit 0
-      fi
-    fi
-    echo '{}'
-    ;;
-
-  *)
-    exit 0
-    ;;
-esac
+# Lifecycle events are handled by the shared portable adapter above.
+echo "Unknown Engram guard action: $ACTION" >&2
+exit 64

@@ -4,6 +4,9 @@ set -uo pipefail
 ROOT="${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}}"
 LABEL="com.yegor.engram.basic-memory"
 
+CHECKPOINTS_ENABLED="$(bash "${ROOT}/scripts/engram-codex-hook.sh" --checkpoints-enabled)" || exit 2
+echo "Automatic checkpoints: $CHECKPOINTS_ENABLED"
+
 bash "$ROOT/scripts/engram-mcp-health.sh" --status
 health_status=$?
 echo

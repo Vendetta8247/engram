@@ -1,10 +1,26 @@
 ---
 name: adopt
-description: Migrate off Claude's native memory into the Engram graph. Backs up EVERYTHING first, shows the manifest, and requires explicit confirmation before migrating or replacing anything. Then offers to build a full project-manager-style KB for the current codebase (single agent / multiple agents / workflow). Reversible.
+description: Adopt Engram in Codex or explicitly migrate Claude native memory. Codex onboarding installs service and routing instructions; real Claude migration backs up first, shows a manifest, and requires confirmation before changing native memory.
 allowed-tools: Bash Read Edit Write Glob Grep AskUserQuestion Agent Workflow
 ---
 
-# /engram:adopt — migrate native Claude memory into Engram (backup-first)
+# /engram:adopt — start using Engram
+
+## Codex-only onboarding
+
+When adoption is requested in Codex without an explicit request to migrate
+Claude memory, run `/engram:setup` for this OS, including its global Codex
+routing block. Verify MCP access, report the configured store and effective
+checkpoint setting, and finish. Checkpoints default on and can be changed with
+`/engram:checkpoints on|off|status`. Do not back up, inspect, migrate, disable,
+or modify Claude memory/settings just because Claude files exist. A selected
+video production folder is a valid project without Git. Offer a scan only when
+useful; ordinary capture will create its project tier automatically.
+
+The remainder applies only when the user actually requests Claude memory
+migration. Preserve the backup and explicit migration confirmation below.
+
+# Claude memory migration (backup-first)
 
 Go live on Engram: back up ALL native memory, migrate the **global** layer into the graph now, and switch the memory system over (disable native auto-memory + install the routing directive). Per-project native memory is backed up but migrated **lazily** — folded in by `/engram:scan` when you actually open a project — so adopt stays fast and cheap instead of reading every project up front. This is **two-phase and safety-critical**: back up + confirm, *then* act. Never skip a beat.
 
@@ -16,7 +32,8 @@ If `~/Engram/INDEX.md` does not exist yet (Engram not set up), run the `/engram:
 
 ## Phase 1 — BACK UP EVERYTHING (always, first, no exceptions)
 
-1. Run the backup script: `bash "${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/scripts/engram-backup.sh"`. It is **read-only** on the source — it copies `~/.claude/CLAUDE.md`, every `~/.claude/projects/*/memory/`, and any `MEMORY.md` into a timestamped `~/Engram/backups/<stamp>/` (tree + tarball + manifest).
+1. On macOS/Linux run the backup script: `bash "${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/scripts/engram-backup.sh"`. It is **read-only** on the source — it copies `~/.claude/CLAUDE.md`, every `~/.claude/projects/*/memory/`, and any `MEMORY.md` into a timestamped `~/Engram/backups/<stamp>/` (tree + tarball + manifest).
+   On native Windows, use the standard-library snapshot procedure in [portable backups](../using-the-graph/references/portable-backups.md), including Claude sources and a manifest. Never require Bash for a native Windows migration.
 2. Print the backup location and the manifest contents so the user sees exactly what was captured and where.
 
 ## Phase 2 — CONFIRM (hard stop)

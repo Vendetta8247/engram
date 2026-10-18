@@ -1,12 +1,25 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/scripts/engram-pretool.sh\"",
+            "commandWindows": "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"uv run --no-project --offline --python 3.12 python (Join-Path ([Environment]::GetEnvironmentVariable('PLUGIN_ROOT')) 'scripts/engram_portable.py') hook\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
             "command": "bash \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/scripts/engram-session-start.sh\"",
-            "timeout": 15
+            "commandWindows": "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"uv run --no-project --offline --python 3.12 python (Join-Path ([Environment]::GetEnvironmentVariable('PLUGIN_ROOT')) 'scripts/engram_portable.py') hook\"",
+            "timeout": 30
           }
         ]
       }
@@ -17,7 +30,8 @@
           {
             "type": "command",
             "command": "bash \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/scripts/engram-precompact.sh\"",
-            "timeout": 15
+            "commandWindows": "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"uv run --no-project --offline --python 3.12 python (Join-Path ([Environment]::GetEnvironmentVariable('PLUGIN_ROOT')) 'scripts/engram_portable.py') hook\"",
+            "timeout": 30
           }
         ]
       }
@@ -28,6 +42,7 @@
           {
             "type": "command",
             "command": "bash \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/scripts/engram-prompt-router.sh\"",
+            "commandWindows": "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"uv run --no-project --offline --python 3.12 python (Join-Path ([Environment]::GetEnvironmentVariable('PLUGIN_ROOT')) 'scripts/engram_portable.py') hook\"",
             "timeout": 15
           }
         ]
@@ -39,6 +54,7 @@
           {
             "type": "command",
             "command": "bash \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/scripts/engram-stop.sh\"",
+            "commandWindows": "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"uv run --no-project --offline --python 3.12 python (Join-Path ([Environment]::GetEnvironmentVariable('PLUGIN_ROOT')) 'scripts/engram_portable.py') hook\"",
             "timeout": 10
           }
         ]

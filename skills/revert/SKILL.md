@@ -1,12 +1,42 @@
 ---
 name: revert
-description: Undo /engram:adopt — restore Claude's native memory exactly as it was before adoption and step Engram aside. The "deinit" / go-back switch. Re-enables native auto-memory, un-thins the native files, removes the routing directive. The Engram graph is preserved (not deleted) unless you ask.
-allowed-tools: Bash Read AskUserQuestion
+description: Undo Engram adoption for the current client while preserving the graph. Codex-only adoption removes its marked routing block without touching Claude; an explicitly requested Claude restore uses the pre-adoption backup and confirmation.
+allowed-tools: Bash Read Edit AskUserQuestion
 ---
 
-# /engram:revert — restore native memory, step Engram aside (the undo of adopt)
+# /engram:revert — undo adoption for the current client
 
-This reverses everything `/engram:adopt` changed, using the pre-adoption backup adopt made. Safety-critical and confirm-gated.
+## Codex-only adoption
+
+Use this branch for Codex-only adoption unless the user explicitly requests a
+Claude memory restore. A request to revert authorizes the bounded routing
+cleanup below; the Claude backup/confirmation flow applies only to an actual
+Claude restore.
+
+1. Read `$CODEX_HOME/AGENTS.md` when configured, otherwise `~/.codex/AGENTS.md`.
+   Back up the file before editing, then remove only the complete block bounded
+   by `<!-- engram:start -->` and `<!-- engram:end -->`. Preserve all other
+   instructions and formatting. If the markers are missing or malformed,
+   report that no safely identifiable block was removed; do not guess which
+   user-written memory instructions to delete.
+2. Preserve the configured Markdown store, checkpoint notes/settings,
+   runtime/database, and backups. Do not inspect or restore `.claude` files,
+   change Claude settings, or require a Claude migration backup.
+3. If disabling/removing the plugin or MCP connection is also requested, use
+   Codex's plugin controls and edit only its `mcp_servers.engram` entry as
+   applicable, preserving unrelated plugins/configuration. Do not give Claude's
+   `/plugin uninstall` command for Codex. Keep the shared memory service running
+   for other clients unless stopping that service was requested.
+4. Verify that the marked routing block is gone and other global instructions
+   remain. Report exactly which routing/plugin/MCP changes occurred and whether
+   the plugin's hooks or MCP connection remain enabled. Removing the routing
+   block alone does not disable those hooks. Restart Codex after client changes.
+   Stop here; do not enter the Claude restore steps.
+
+## Claude memory restore
+
+This reverses a real Claude migration using its pre-adoption backup. The
+explicit confirmation below remains required before restoring native files.
 
 ## 1. Find the restore point
 - List `~/Engram/backups/` (newest first). Use `$ARGUMENTS` if a timestamp was given; otherwise the **most recent** adopt backup. Each backup's `tree/` mirrors `~/.claude/` as it was pre-adoption (CLAUDE.md, settings.json(+local), every project `memory/`, MEMORY.md).

@@ -7,10 +7,11 @@ description: How the Engram knowledge graph works and how to maintain it AUTOMAT
 
 Engram is the durable memory and each project's **operational encyclopedia**.
 It is a graph of markdown notes, served by the **basic-memory** MCP. A developed
-project tier should contain the key product, architecture, subsystem, data,
-integration, runbook, convention, decision, and gotcha knowledge needed to work
-effectively without reconstructing the project from old chats. Use it instead
-of `CLAUDE.md` / `MEMORY.md` (those are thin pointers to this graph).
+project tier should contain the key goals, product or creative brief, architecture
+or production workflow, assets/data, integrations, runbooks, conventions, decisions,
+and gotchas needed to work effectively without reconstructing old chats. Software,
+video, research, and other folder-based projects use the same graph; Git is
+optional. Use it instead of `CLAUDE.md` / `MEMORY.md` (those are thin pointers to this graph).
 
 ## Two buckets — decide where a fact lives
 
@@ -19,7 +20,7 @@ The store has exactly two top-level buckets — **`global/`** and **`projects/`*
 | Fact | Goes to |
 |---|---|
 | Reusable across projects (a KMP pattern, how the user works, a general gotcha) | a domain folder under **`~/Engram/global/`** — `global/workflow/`, `global/kmp/`, `global/ios/`, `global/android/`, `global/tooling/`, … |
-| Specific to ONE project/app (its config, IDs, this app's internals — e.g. a Firebase bucket name) | **`~/Engram/projects/<name>/`** |
+| Specific to ONE project (its config, IDs, brief, asset locations, or delivery requirements) | **`~/Engram/projects/<name>/`** |
 | Routine implementation detail already obvious in code/config | **nowhere** — do not mirror code; store the authoritative pointer when it is needed for orientation |
 | Raw thought to sort later | the **inbox** (`~/Engram/inbox/`), via `/engram:triage` later |
 | Research or a hypothesis still being tested | temporary `projects/<name>/research/` (or `global/research/` only if truly cross-project); promote or discard when resolved |
@@ -33,7 +34,9 @@ link. One fact, one home — never duplicate.
 organizes into sub-folders: `product/` (PM/overview/business/roadmap), `systems/`
 (each subsystem), `screens/` (each user-facing surface), `architecture/`
 (modules, data model, boundaries), `runbooks/` (repeatable operations), and
-temporary `research/`. When a repo has **no** `projects/<name>/` notes
+temporary `research/`. For a video project use `brief/`, `production/`, `assets/`,
+and `delivery/` where useful; see [project workspaces](references/project-workspaces.md).
+When a project has **no** `projects/<name>/` notes
 yet, OFFER to `/engram:scan` it (ask first) — that surveys the project and builds
 this KB in one pass.
 
@@ -41,17 +44,21 @@ this KB in one pass.
 two sibling buckets: `~/Engram/global/` (reusable knowledge, organized into
 domain folders) and `~/Engram/projects/` (one folder per project). That's why
 cross-project recall is a single search. Project-specific facts go in
-`~/Engram/projects/<project-name>/`, where `<project-name>` is the current git
-repo's folder name — create that subfolder automatically the first time you
-store project knowledge there (no `/engram:init`, no per-repo files, no
+`~/Engram/projects/<project-name>/`. Resolve the project using an explicit name,
+then the selected workspace, then Git root if present, then current folder; see
+[project workspaces](references/project-workspaces.md) for exclusions and video
+projects. Create that subfolder automatically the first time you store project
+knowledge there (no `/engram:init`, no per-repo files, no
 `.mcp.json` pin; memory is never scattered into the repos themselves). When
 recalling, search the whole store — a fact from another project is one query
 away.
 
 ## How to write (basic-memory MCP tools)
 
-Use `write_note` / `edit_note`. Before writing, `search` the graph — if the
-note exists, **edit it in place**; never fork a duplicate.
+Use `write_note` / `edit_note` for encyclopedia notes. Verified per-chat
+checkpoints use the continuity helper described below. Before writing canonical
+knowledge, `search` the graph — if the note exists, **edit it in place**; never
+fork a duplicate.
 
 **Be precise and complete for the concept — structured, not artificially
 short.** One concept per note still retrieves better than an omnibus document,
@@ -92,15 +99,38 @@ unscoped query blends every project's notes together. Start with compact
 the task requires. Do not dump the whole encyclopedia into context. Only widen
 to other projects when the local pass misses or the question is explicitly
 cross-project. Follow typed relations instead of re-deriving known structure.
+If compact `search` returns `Unsupported MCP client`, use `search_notes` with
+`project: "engram"`, a targeted query, `page_size: 3` (at most 5), and no automatic
+pagination; prefer matching `projects/<current>/` paths, then linked `global/`.
+Here `engram` is the one Basic Memory store project, not the creative project name.
+Read only the selected notes; avoid unbounded `build_context` neighborhoods.
 
 ## Encyclopedia, live checkpoint, and research are different layers
 
 - **Permanent encyclopedia:** canonical topic notes that explain the project
   precisely enough to work on it. Update these in place as verified reality
   changes.
-- **Live checkpoint:** one small mutable handoff for a long active procedure:
-  objective, current status, decisions and why, exact refs/commits, verification,
-  blockers/safety, and next action. It is not a substitute for topic notes.
+- **Verified per-chat checkpoint (configurable, default on):** preserve current
+  objective, progress, decisions, references, verification, blockers and next
+  action separately from permanent topic notes. Follow
+  [chat continuity](references/chat-continuity.md): save through
+  `scripts/engram_continuity.py` after milestones, before long actions and at
+  the end of every user turn, even in short chats. Use the actual hook session
+  ID; two chats in one project must never overwrite one another. A local journal
+  attempt is written first; only graph write plus exact readback earns a
+  verified receipt. Restore from the validated graph or clearly marked last
+  verified local snapshot on resume. Stop requires current-turn verification;
+  PreCompact freshly revalidates it and blocks on missing/stale/failed saves.
+  Save earlier: the hook has no remaining-token input and cannot make the model
+  write during PreCompact. This restores checked work state, not full chat
+  wording or unsaved actions, and never cleans native Codex history.
+  Consult `scripts/engram_settings.py status` first: `checkpoints_enabled` in
+  `~/.engram/settings.json` defaults on; `ENGRAM_CONFIG_PATH` selects the file
+  and `ENGRAM_CHECKPOINTS_ENABLED` overrides the value. Invalid settings are an
+  error to report. When off, skip automatic checkpoint saves and gates without
+  changing normal recall/capture or storage protection. Explicit manual saves
+  and earlier recovery notes remain available; never silently override off.
+  `/engram:checkpoints on|off|status` controls the preference.
 - **Temporary research:** evidence and hypotheses still being evaluated. Follow
   [the research lifecycle](references/research-lifecycle.md). When research is
   validated, migrate the stable conclusions into permanent canonical notes and
@@ -127,14 +157,15 @@ ask you to remember or recall. `/engram:remember` and `/engram:recall` are
 manual overrides; the default is that you do this proactively:
 
 - **Auto-recall** — at session start and before any non-trivial work on a
-  project, `search`/`build_context` the store for this project's notes
+  project, use compact `search`, then read 1–3 routing notes for this project
   (`projects/<name>/`) + their linked global knowledge *without being asked*.
   Lead with what's already known. Widen to other projects' notes only if the
   local pass misses or the task is explicitly cross-project.
 - **Auto-capture** — the moment you learn something durable or verify key
   project knowledge, write it to the graph immediately, mid-task, without being
   asked: product behavior, architecture, subsystem contracts, data flow,
-  integrations, runbooks, conventions, user preferences, corrections, gotchas,
+  integrations, runbooks, conventions, creative briefs, asset provenance/rights,
+  editing/export contracts, user preferences, corrections, gotchas,
   decisions-and-why, and reusable patterns.
   Don't batch it to "later" and don't wait for a command.
 
