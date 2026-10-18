@@ -1,7 +1,7 @@
 {
   "name": "engram",
   "displayName": "Engram",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Durable project knowledge and bounded checkpoints over one supervised local MCP service shared with Codex.",
   "author": {
     "name": "Yegor Yeriomin"

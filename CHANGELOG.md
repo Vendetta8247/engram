@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.1 — 2026-10-18
+
+- Fix a Codex recovery deadlock when context compaction was required before the
+  agent could save a fresh checkpoint. Missing, stale or unverified checkpoints
+  now produce a recovery warning without blocking native compaction.
+- Preserve native history and staged attempts, require reconciliation and a
+  verified save after compaction, and retain the verified-save requirement at
+  the end of each turn. Automatic checkpoints remain enabled.
+- Apply the same recovery behavior when checkpoint storage or the hook runtime
+  is unavailable, and add regression coverage for repeated resume attempts.
+
 ## 0.5.0 — 2026-10-18
 
 - Add optional automatic checkpoints, enabled by default. Use
